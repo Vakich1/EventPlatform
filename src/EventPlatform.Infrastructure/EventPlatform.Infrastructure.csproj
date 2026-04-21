@@ -12,7 +12,8 @@
 
     <ItemGroup>
       <PackageReference Include="MailKit" Version="4.15.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.7" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -26,7 +27,6 @@
 
     <ItemGroup>
       <Folder Include="Persistence\Migrations\" />
-      <Folder Include="Services\" />
     </ItemGroup>
 
 </Project>
