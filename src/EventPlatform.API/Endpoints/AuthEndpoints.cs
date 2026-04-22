@@ -1,4 +1,5 @@
 using EventPlatform.Application.Auth.Commands.LoginUser;
+using EventPlatform.Application.Auth.Commands.RefreshToken;
 using EventPlatform.Application.Auth.Commands.RegisterUser;
 using MediatR;
 
@@ -32,6 +33,19 @@ public static class AuthEndpoints
         })
         .WithName("LoginUser")
         .WithSummary("Login user")
+        .AllowAnonymous();
+        
+        group.MapPost("/refresh-token", async (
+            RefreshTokenCommand command,
+            ISender sender,
+            CancellationToken cancellationToken
+        ) =>
+        {
+            var result = await sender.Send(command, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("RefreshToken")
+        .WithSummary("Refresh access token")
         .AllowAnonymous();
     }
 }
