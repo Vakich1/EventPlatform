@@ -1,3 +1,4 @@
+using EventPlatform.Application.Auth.Commands.LoginUser;
 using EventPlatform.Application.Auth.Commands.RegisterUser;
 using MediatR;
 
@@ -19,6 +20,18 @@ public static class AuthEndpoints
         })
         .WithName("RegisterUser")
         .WithSummary("Register a new user")
+        .AllowAnonymous();
+        
+        group.MapPost("/login", async (
+            LoginUserCommand command,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(command, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("LoginUser")
+        .WithSummary("Login user")
         .AllowAnonymous();
     }
 }
