@@ -1,4 +1,8 @@
+using EventPlatform.Application.Events.Commands.AddTicketType;
+using EventPlatform.Application.Events.Commands.CancelEvent;
 using EventPlatform.Application.Events.Commands.CreateEvent;
+using EventPlatform.Application.Events.Commands.PublishEvent;
+using EventPlatform.Application.Events.Commands.UpdateEvent;
 using EventPlatform.Application.Events.Queries.GetEventById;
 using EventPlatform.Application.Events.Queries.GetEvents;
 using MediatR;
@@ -47,5 +51,50 @@ public static class EventEndpoints
         })
         .WithName("GetEvents")
         .WithSummary("Get paginated list of events");
+
+        group.MapPut("/{id:guid}", async (
+            Guid id,
+            UpdateEventCommand command,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            await sender.Send(command with { Id = id }, cancellationToken);
+        })
+        .WithName("UpdateEvent")
+        .WithSummary("Update event");
+        
+        group.MapPost("/{id:guid}/cancel", async (
+            Guid id,
+            ISender sender,
+            CancellationToken  cancellationToken) =>
+        {
+            await sender.Send(new CancelEventCommand(id), cancellationToken);  
+            return Results.NoContent();
+        })
+        .WithName("CancelEvent")
+        .WithSummary("Cancel event");
+        
+        group.MapPost("/{id:guid}/publish", async (
+            Guid id,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            await sender.Send(new PublishEventCommand(id), cancellationToken);
+            return Results.NoContent();
+        })
+        .WithName("PublishEvent")
+        .WithSummary("Publish event");
+        
+        group.MapPost("/{id:guid}/ticket-types", async (
+            Guid id,
+            AddTicketTypeCommand command,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var ticketTypeId = await sender.Send(command with {EventId = id}, cancellationToken); 
+            return Results.Ok(new { id = ticketTypeId });
+        })
+        .WithName("AddTicketType")
+        .WithSummary("Add ticket type to event");
     }
 }
