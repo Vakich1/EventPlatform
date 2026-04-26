@@ -1,3 +1,4 @@
+using EventPlatform.Application.Registrations.Commands.CheckInTicket;
 using EventPlatform.Application.Registrations.Commands.CreateRegistration;
 using MediatR;
 
@@ -20,6 +21,17 @@ public static class RegistrationEndpoints
                 return Results.Ok(new { id = registrationsId });
             })
             .WithName("CreateRegistration")
-            .WithSummary("Register for an event");    
+            .WithSummary("Register for an event");
+
+        group.MapPost("/check-in", async (
+                CheckInTicketCommand command,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(command, cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("CheckInTicket")
+            .WithSummary("Check in attendee by QR code");
     }    
 }

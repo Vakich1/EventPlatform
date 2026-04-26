@@ -70,6 +70,7 @@ public class CreateRegistrationCommandHandler : IRequestHandler<CreateRegistrati
 
         var qrCode = _qrCodeService.Generate(registration.Id.ToString());
         var ticket = Ticket.Create(registration.Id, qrCode);
+        _context.Tickets.Add(ticket);
 
         await _context.SaveChangesAsync(cancellationToken);
 
