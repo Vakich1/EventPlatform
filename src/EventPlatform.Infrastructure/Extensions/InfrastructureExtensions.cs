@@ -20,6 +20,8 @@ public static class InfrastructureExtensions
         services.AddScoped<IJwtService, JwtService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IQrCodeService, QrCodeService>();
+        services.AddScoped<IEmailService, EmailService>();
         
         return services;
     }

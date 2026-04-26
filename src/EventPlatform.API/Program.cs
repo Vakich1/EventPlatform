@@ -53,5 +53,6 @@ app.UseHttpsRedirection();
 
 app.MapAuthEndpoints();
 app.MapEventEndpoints();
+app.MapRegistrationEndpoints();
 
 app.Run();

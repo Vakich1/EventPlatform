@@ -84,5 +84,5 @@ public class Event : BaseEntity
     
     public void AddTicketType(TicketType  ticketType) => _ticketTypes.Add(ticketType);
     
-    public bool IsPublished() => Status == EventStatus.Published;
+    public bool IsPublished => Status == EventStatus.Published;
 }
