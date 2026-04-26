@@ -7,6 +7,7 @@ using EventPlatform.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Stripe;
 
 namespace EventPlatform.Infrastructure.Extensions;
 
@@ -22,6 +23,8 @@ public static class InfrastructureExtensions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IQrCodeService, QrCodeService>();
         services.AddScoped<IEmailService, EmailService>();
+        StripeConfiguration.ApiKey = configuration["StripeSettings:SecretKey"];
+        services.AddScoped<IPaymentService, PaymentService>();
         
         return services;
     }

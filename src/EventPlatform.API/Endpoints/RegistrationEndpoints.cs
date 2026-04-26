@@ -1,4 +1,5 @@
 using EventPlatform.Application.Registrations.Commands.CheckInTicket;
+using EventPlatform.Application.Registrations.Commands.CreatePaymentIntent;
 using EventPlatform.Application.Registrations.Commands.CreateRegistration;
 using MediatR;
 
@@ -33,5 +34,16 @@ public static class RegistrationEndpoints
             })
             .WithName("CheckInTicket")
             .WithSummary("Check in attendee by QR code");
+        
+        group.MapPost("/payment-intent", async (
+            CreatePaymentIntentCommand command,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(command, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("CreatePaymentIntent")
+        .WithSummary("Create payment intent for paid ticket");
     }    
 }

@@ -45,6 +45,9 @@ public class CreateRegistrationCommandHandler : IRequestHandler<CreateRegistrati
 
         if (ticketType.AvailableQuantity <= 0)
             throw new DomainException("No tickets available for this ticket type.");
+        
+        if (!ticketType.IsFree)
+            throw new DomainException("This ticket type requires payment. Use the payment endpoint.");
 
         var alreadyRegistered = await _context.Registrations
             .AnyAsync(r => r.UserId == _currentUserService.UserId && r.TicketTypeId == request.TicketTypeId,

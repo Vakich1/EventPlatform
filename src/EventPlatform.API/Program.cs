@@ -54,5 +54,6 @@ app.UseHttpsRedirection();
 app.MapAuthEndpoints();
 app.MapEventEndpoints();
 app.MapRegistrationEndpoints();
+app.MapWebhookEndpoints();
 
 app.Run();
