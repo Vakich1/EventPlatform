@@ -1,4 +1,5 @@
 using EventPlatform.Application.Common.Interfaces;
+using EventPlatform.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 
@@ -55,6 +56,54 @@ public static class WebhookEndpoints
                     registration.Event.Title,
                     registration.Event.StartDate,
                     qrCode);
+            }
+            
+            if (stripeEvent.Type == "payment_intent.payment_failed")
+            {
+                var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
+                if (paymentIntent is null)
+                    return Results.BadRequest();
+
+                var registrationId = await paymentService.GetRegistrationIdFromPaymentIntent(paymentIntent.Id);
+
+                var registration = await context.Registrations
+                    .Include(r => r.Payment)
+                    .Include(r => r.TicketType)
+                    .FirstOrDefaultAsync(r => r.Id == registrationId);
+
+                if (registration is null)
+                    return Results.NotFound();
+
+                if (registration.Payment!.Status == PaymentStatus.Succeeded)
+                    registration.TicketType.DecrementSold();
+                
+                registration.Payment!.MarkAsFailed();
+
+                await context.SaveChangesAsync();
+            }
+            
+            if (stripeEvent.Type == "payment_intent.canceled")
+            {
+                var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
+                if (paymentIntent is null)
+                    return Results.BadRequest();
+
+                var registrationId = await paymentService.GetRegistrationIdFromPaymentIntent(paymentIntent.Id);
+
+                var registration = await context.Registrations
+                    .Include(r => r.Payment)
+                    .Include(r => r.TicketType)
+                    .FirstOrDefaultAsync(r => r.Id == registrationId);
+
+                if (registration is null)
+                    return Results.NotFound();
+
+                if (registration.Payment!.Status == PaymentStatus.Succeeded)
+                    registration.TicketType.DecrementSold();
+                
+                registration.Payment!.MarkAsFailed();
+
+                await context.SaveChangesAsync();
             }
             
             return Results.Ok();
