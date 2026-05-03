@@ -13,11 +13,38 @@ public static class EventEndpoints
 {
     public static void MapEventEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/events")
+        var publicGroup = app.MapGroup("/api/events")
+            .WithTags("Events");
+        
+        publicGroup.MapGet("/", async (
+                ISender sender,
+                CancellationToken cancellationToken,
+                string? searchTerm = null,
+                int page = 1,
+                int pageSize = 10) =>
+            {
+                var result = await sender.Send(new GetEventsQuery(searchTerm, page, pageSize), cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("GetEvents")
+            .WithSummary("Get paginated list of events");
+        
+        publicGroup.MapGet("/{id:guid}", async (
+                Guid id,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new GetEventByIdQuery(id),  cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("GetEventById")
+            .WithSummary("Get event by id");
+        
+        var protectedGroup = app.MapGroup("/api/events")
             .WithTags("Events")
             .RequireAuthorization();
 
-        group.MapPost("/", async (
+        protectedGroup.MapPost("/", async (
                 CreateEventCommand command,
                 ISender sender,
                 CancellationToken cancellationToken) =>
@@ -28,31 +55,7 @@ public static class EventEndpoints
             .WithName("CreateEvent")
             .WithSummary("Create a new event");
         
-        group.MapGet("/{id:guid}", async (
-            Guid id,
-            ISender sender,
-            CancellationToken cancellationToken) =>
-        {
-            var result = await sender.Send(new GetEventByIdQuery(id),  cancellationToken);
-            return Results.Ok(result);
-        })
-        .WithName("GetEventById")
-        .WithSummary("Get event by id");
-        
-        group.MapGet("/", async (
-            ISender sender,
-            CancellationToken cancellationToken,
-            string? searchTerm = null,
-            int page = 1,
-            int pageSize = 10) =>
-        {
-            var result = await sender.Send(new GetEventsQuery(searchTerm, page, pageSize), cancellationToken);
-            return Results.Ok(result);
-        })
-        .WithName("GetEvents")
-        .WithSummary("Get paginated list of events");
-
-        group.MapPut("/{id:guid}", async (
+        protectedGroup.MapPut("/{id:guid}", async (
             Guid id,
             UpdateEventCommand command,
             ISender sender,
@@ -63,7 +66,7 @@ public static class EventEndpoints
         .WithName("UpdateEvent")
         .WithSummary("Update event");
         
-        group.MapPost("/{id:guid}/cancel", async (
+        protectedGroup.MapPost("/{id:guid}/cancel", async (
             Guid id,
             ISender sender,
             CancellationToken  cancellationToken) =>
@@ -74,7 +77,7 @@ public static class EventEndpoints
         .WithName("CancelEvent")
         .WithSummary("Cancel event");
         
-        group.MapPost("/{id:guid}/publish", async (
+        protectedGroup.MapPost("/{id:guid}/publish", async (
             Guid id,
             ISender sender,
             CancellationToken cancellationToken) =>
@@ -85,7 +88,7 @@ public static class EventEndpoints
         .WithName("PublishEvent")
         .WithSummary("Publish event");
         
-        group.MapPost("/{id:guid}/ticket-types", async (
+        protectedGroup.MapPost("/{id:guid}/ticket-types", async (
             Guid id,
             AddTicketTypeCommand command,
             ISender sender,
