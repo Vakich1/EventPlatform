@@ -1,6 +1,7 @@
 using EventPlatform.Application.Registrations.Commands.CheckInTicket;
 using EventPlatform.Application.Registrations.Commands.CreatePaymentIntent;
 using EventPlatform.Application.Registrations.Commands.CreateRegistration;
+using EventPlatform.Application.Registrations.Queries.GetUserRegistration;
 using MediatR;
 
 namespace EventPlatform.API.Endpoints;
@@ -45,5 +46,16 @@ public static class RegistrationEndpoints
         })
         .WithName("CreatePaymentIntent")
         .WithSummary("Create payment intent for paid ticket");
+        
+        group.MapGet("/my/{eventId:guid}", async (
+            Guid eventId,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetUserRegistrationQuery(eventId), cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("GetUserRegistration")
+        .WithSummary("Get current user registration for event");
     }    
 }

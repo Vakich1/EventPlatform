@@ -164,7 +164,9 @@ export default function HomePage() {
                                         <span className={`inline-block text-xs font-medium px-2 py-1 rounded-full mb-3 ${
                                             event.status === 'Published'
                                                 ? 'bg-green-100 text-green-700'
-                                                : 'bg-gray-100 text-gray-600'
+                                                : event.status === 'Cancelled'
+                                                    ? 'bg-red-100 text-red-700'
+                                                    : 'bg-gray-100 text-gray-600'
                                         }`}>
                                             {event.status}
                                         </span>

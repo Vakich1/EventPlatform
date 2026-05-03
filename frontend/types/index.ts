@@ -45,3 +45,9 @@ export interface PagedResult<T> {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
 }
+
+export interface UserRegistration {
+    registrationId: string;
+    ticketTypeId: string;
+    ticketTypeName: string;
+}
