@@ -60,6 +60,8 @@ export default function EventDetailPage () {
                     ticketTypeId,
                 });
                 setSuccessMessage('Successfully registered! Check your email for the ticket.');
+                const regResponse = await api.get<UserRegistration>(`/registrations/my/${id}`);
+                setUserRegistration(regResponse.data);
             } else {
                 const response = await api.post('/registrations/payment-intent', {
                     eventId: id,
@@ -123,14 +125,14 @@ export default function EventDetailPage () {
                             <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
                             <div>
                                 <p className="text-xs text-gray-500">Start</p>
-                                <p className="text-sm font-medium text-gray-900">{formatDate(event.startDate)}</p>
+                                <p className="text-sm font-medium text-gray-900">{formatDate(event.startDate, undefined, true)}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
                             <div>
                                 <p className="text-xs text-gray-500">End</p>
-                                <p className="text-sm font-medium text-gray-900">{formatDate(event.endDate)}</p>
+                                <p className="text-sm font-medium text-gray-900">{formatDate(event.endDate, undefined, true)}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">

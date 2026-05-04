@@ -28,6 +28,16 @@ public class CancelEventCommandHandler : IRequestHandler<CancelEventCommand>
 
         @event.Cancel();
         
+        var tickets = await _context.Tickets
+            .Include(t => t.Registration)
+            .Where(t => t.Registration.EventId == request.Id && t.Status == Domain.Enums.TicketStatus.Active)
+            .ToListAsync(cancellationToken);
+
+        foreach (var ticket in tickets)
+        {
+            ticket.Cancel();
+        }
+        
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

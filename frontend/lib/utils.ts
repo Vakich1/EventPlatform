@@ -1,10 +1,17 @@
-export function formatDate(dateString: string, options?: Intl.DateTimeFormatOptions) {
-    return new Date(dateString).toLocaleDateString('en-US', options ?? {
+export function formatDate(
+    dateString: string,
+    options?: Intl.DateTimeFormatOptions,
+    showTime: boolean = false
+) {
+    const defaultOptions: Intl.DateTimeFormatOptions = {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
         year: 'numeric',
-    });
+        ...(showTime && { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    return new Date(dateString).toLocaleDateString('en-US', options ?? defaultOptions);
 }
 
 export function getStatusColor(status: string) {
