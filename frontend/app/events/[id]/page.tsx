@@ -5,8 +5,10 @@ import {useAuth} from "@/context/AuthContext";
 import {useEffect, useState} from "react";
 import {EventDetail, UserRegistration} from "@/types";
 import api from "@/lib/api";
-import Link from "next/link";
 import { Calendar, MapPin, Ticket, ArrowLeft, Users } from 'lucide-react';
+import Navbar from "@/components/Navbar";
+import { formatDate, getStatusColor } from '@/lib/utils';
+import EventDetailSkeleton from "@/components/EventDetailSkeleton";
 
 export default function EventDetailPage () {
     const { id } = useParams<{ id: string}>();
@@ -81,54 +83,25 @@ export default function EventDetailPage () {
         }
     };
 
-    const formatDate = (dtaeString: string) => {
-        return new Date(dtaeString).toLocaleDateString('en-US', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
-
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-gray-500">Loading...</div>
+            <div className="min-h-screen bg-gray-50">
+                <Navbar />
+                <EventDetailSkeleton />
             </div>
-        )
+        );
     }
 
     if(!event) return null;
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <nav className="bg-white border-b border-gray-200">
-                <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <Link href="/" className="text-xl font-bold text-blue-600">
-                        EventPlatform
-                    </Link>
-                    {!authLoading && (
-                        <div className="flex items-center gap-4">
-                            {isAuthenticated ? (
-                                <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
-                                    Dashboard
-                                </Link>
-                            ) : (
-                                <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900">
-                                    Sign in
-                                </Link>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </nav>
+            <Navbar />
 
             <div className="max-w-5xl mx-auto px-4 py-8">
                 <button
                     onClick={() => router.back()}
-                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6"
+                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     Back
@@ -137,13 +110,7 @@ export default function EventDetailPage () {
                 <div className="bg-white rounded-xl shadow-sm p-8">
                     <div className="flex items-start justify-between mb-6">
                         <div>
-                            <span className={`inline-block text-xs font-medium px-2 py-1 rounded-full mb-3 ${
-                                event.status === 'Published'
-                                    ? 'bg-green-100 text-green-700'
-                                    : event.status === 'Cancelled'
-                                        ? 'bg-red-100 text-red-700'
-                                        : 'bg-gray-100 text-gray-600'
-                            }`}>
+                            <span className={`inline-block text-xs font-medium px-2 py-1 rounded-full mb-3 ${getStatusColor(event.status)}`}>
                                 {event.status}
                             </span>
                             <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
@@ -223,7 +190,7 @@ export default function EventDetailPage () {
                                                 registeringTicketId === ticketType.id ||
                                                 !!userRegistration
                                             }
-                                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                         >
                                             {userRegistration?.ticketTypeId === ticketType.id
                                                 ? '✓ Registered'

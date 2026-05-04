@@ -5,8 +5,8 @@ import {useRouter} from "next/navigation";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
-import Link from 'next/link';
 import api from "@/lib/api";
+import Navbar from "@/components/Navbar";
 
 const createEventSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200),
@@ -57,16 +57,7 @@ export default function CreateEventPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <nav className="bg-white border-b border-gray-200">
-                <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <Link href="/" className="text-xl font-bold text-blue-600">
-                        EventPlatform
-                    </Link>
-                    <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
-                        Dashboard
-                    </Link>
-                </div>
-            </nav>
+            <Navbar />
 
             <div className="max-w-2xl mx-auto px-4 py-8">
                 <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Event</h1>

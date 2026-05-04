@@ -15,35 +15,46 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-        if (typeof window === 'undefined') return false;
-        return !!localStorage.getItem('accessToken');
-    });
-    const [isLoading, setIsLoading] = useState(false);
-    
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        setIsAuthenticated(!!token);
+        setIsLoading(false);
+    }, []);
 
     const login = async (email: string, password: string) => {
-        const response = await api.post<AuthResult>("/auth/login", {email, password});
-        localStorage.setItem('accessToken', response.data.accessToken);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+        const response = await api.post<AuthResult>('/auth/login', { email, password });
+        const { accessToken, refreshToken } = response.data;
+
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        document.cookie = `accessToken=${accessToken}; path=/; max-age=3600`;
+
         setIsAuthenticated(true);
     };
-    
+
     const register = async (email: string, password: string, firstName: string, lastName: string) => {
-        const response = await api.post<AuthResult>("/auth/register", {
+        const response = await api.post<AuthResult>('/auth/register', {
             email,
             password,
             firstName,
             lastName,
         });
-        localStorage.setItem('accessToken', response.data.accessToken);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+        const { accessToken, refreshToken } = response.data;
+
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        document.cookie = `accessToken=${accessToken}; path=/; max-age=3600`;
+
         setIsAuthenticated(true);
-    }
-    
+    };
+
     const logout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        document.cookie = 'accessToken=; path=/; max-age=0';
         setIsAuthenticated(false);
     };
     

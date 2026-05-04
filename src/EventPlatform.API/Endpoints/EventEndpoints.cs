@@ -5,6 +5,7 @@ using EventPlatform.Application.Events.Commands.PublishEvent;
 using EventPlatform.Application.Events.Commands.UpdateEvent;
 using EventPlatform.Application.Events.Queries.GetEventById;
 using EventPlatform.Application.Events.Queries.GetEvents;
+using EventPlatform.Application.Events.Queries.GetMyEvents;
 using MediatR;
 
 namespace EventPlatform.API.Endpoints;
@@ -99,5 +100,17 @@ public static class EventEndpoints
         })
         .WithName("AddTicketType")
         .WithSummary("Add ticket type to event");
+        
+        protectedGroup.MapGet("/my", async (
+            ISender sender,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 10) =>
+        {
+            var result = await sender.Send(new GetMyEventsQuery(page, pageSize), cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("GetMyEvents")
+        .WithSummary("Get current user events");
     }
 }
