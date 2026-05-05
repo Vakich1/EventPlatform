@@ -81,6 +81,15 @@ public class Event : BaseEntity
         Status = EventStatus.Cancelled;
         SetUpdatedAt();
     }
+
+    public void Complete()
+    {
+        if (Status != EventStatus.Published)
+            throw new DomainException("Only published events can be completed.");
+
+        Status = EventStatus.Completed;
+        SetUpdatedAt();
+    }
     
     public void AddTicketType(TicketType  ticketType) => _ticketTypes.Add(ticketType);
     

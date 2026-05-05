@@ -25,6 +25,7 @@ public static class InfrastructureExtensions
         services.AddScoped<IEmailService, EmailService>();
         StripeConfiguration.ApiKey = configuration["StripeSettings:SecretKey"];
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddHostedService<EventStatusUpdateService>();
         
         return services;
     }
