@@ -9,6 +9,7 @@ import { Calendar, MapPin, Ticket, ArrowLeft, Users } from 'lucide-react';
 import Navbar from "@/components/Navbar";
 import { formatDate, getStatusColor } from '@/lib/utils';
 import EventDetailSkeleton from "@/components/EventDetailSkeleton";
+import PaymentModal from '@/components/PaymentModal';
 
 export default function EventDetailPage () {
     const { id } = useParams<{ id: string}>();
@@ -21,6 +22,12 @@ export default function EventDetailPage () {
     const [registeringTicketId, setRegisteringTicketId] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [paymentModal, setPaymentModal] = useState<{
+        amount: number;
+        ticketName: string;
+        eventId: string;
+        ticketTypeId: string;
+    } | null>(null);
 
     useEffect(() => {
         const load = async () => {
@@ -49,7 +56,6 @@ export default function EventDetailPage () {
             return;
         }
 
-        setRegisteringTicketId(ticketTypeId);
         setError(null);
         setSuccessMessage(null);
 
@@ -63,13 +69,12 @@ export default function EventDetailPage () {
                 const regResponse = await api.get<UserRegistration>(`/registrations/my/${id}`);
                 setUserRegistration(regResponse.data);
             } else {
-                const response = await api.post('/registrations/payment-intent', {
+                setPaymentModal({
+                    amount: event!.ticketTypes.find(tt => tt.id === ticketTypeId)?.price || 0,
+                    ticketName: event!.ticketTypes.find(tt => tt.id === ticketTypeId)?.name || 'Ticket',
                     eventId: id,
                     ticketTypeId,
                 });
-                // TODO: интегрировать Stripe Elements для оплаты
-                // Пока показываем clientSecret для демонстрации
-                setSuccessMessage(`Payment intent created. Client secret: ${response.data.clientSecret.substring(0, 20)}...`);
             }
             const updated = await api.get(`/events/${id}`);
             setEvent(updated.data);
@@ -211,6 +216,26 @@ export default function EventDetailPage () {
                     )}
                 </div>
             </div>
+            {paymentModal && (
+                <PaymentModal
+                    amount={paymentModal.amount}
+                    ticketName={paymentModal.ticketName}
+                    eventId={paymentModal.eventId}
+                    ticketTypeId={paymentModal.ticketTypeId}
+                    onSuccess={async () => {
+                        setPaymentModal(null);
+                        setSuccessMessage('Payment successful! Check your email for the ticket.');
+
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+
+                        const regResponse = await api.get<UserRegistration>(`/registrations/my/${id}`);
+                        setUserRegistration(regResponse.data);
+                        const updated = await api.get<EventDetail>(`/events/${id}`);
+                        setEvent(updated.data);
+                    }}
+                    onClose={() => setPaymentModal(null)}
+                />
+            )}
         </div>
     );
 }

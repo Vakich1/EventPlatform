@@ -67,5 +67,6 @@ app.MapAuthEndpoints();
 app.MapEventEndpoints();
 app.MapRegistrationEndpoints();
 app.MapWebhookEndpoints();
+app.MapPaymentEndpoints();
 
 app.Run();
