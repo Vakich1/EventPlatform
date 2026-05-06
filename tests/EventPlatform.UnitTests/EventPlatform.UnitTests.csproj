@@ -20,8 +20,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EventPlatform.Application\EventPlatform.Application.csproj" />
-      <ProjectReference Include="..\EventPlatform.Domain\EventPlatform.Domain.csproj" />
+      <ProjectReference Include="..\..\src\EventPlatform.Application\EventPlatform.Application.csproj" />
+      <ProjectReference Include="..\..\src\EventPlatform.Domain\EventPlatform.Domain.csproj" />
     </ItemGroup>
 
 </Project>

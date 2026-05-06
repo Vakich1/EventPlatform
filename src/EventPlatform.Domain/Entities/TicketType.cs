@@ -25,7 +25,7 @@ public class TicketType : BaseEntity
         if (price < 0)
             throw new DomainException("Price cannot be negative.");
 
-        if (totalQuantity < 0)
+        if (totalQuantity <= 0)
             throw new DomainException("Total quantity must be greater than zero.");
 
         return new TicketType
