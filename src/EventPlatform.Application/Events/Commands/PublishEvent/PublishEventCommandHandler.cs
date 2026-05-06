@@ -9,11 +9,13 @@ public class PublishEventCommandHandler : IRequestHandler<PublishEventCommand>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICacheService _cache;
 
-    public PublishEventCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
+    public PublishEventCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService,  ICacheService cache)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _cache = cache;
     }
 
     public async Task Handle(PublishEventCommand request, CancellationToken cancellationToken)
@@ -31,5 +33,7 @@ public class PublishEventCommandHandler : IRequestHandler<PublishEventCommand>
         @event.Publish();
         
         await _context.SaveChangesAsync(cancellationToken);
+        
+        await _cache.RemoveByPatternAsync("events:list:", cancellationToken);
     }
 }

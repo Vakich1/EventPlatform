@@ -8,14 +8,22 @@ namespace EventPlatform.Application.Events.Queries.GetEvents;
 public class GetEventsQueryHandler : IRequestHandler<GetEventsQuery, PagedResult<EventSummaryDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
-    public GetEventsQueryHandler(IApplicationDbContext context)
+    public GetEventsQueryHandler(IApplicationDbContext context,  ICacheService cache)
     {
         _context = context;
+        _cache =  cache;
     }
 
     public async Task<PagedResult<EventSummaryDto>> Handle(GetEventsQuery request, CancellationToken cancellationToken)
     {
+        var cacheKey = $"events:list:{request.SearchTerm ?? "all"}:page:{request.Page}:size:{request.PageSize}";
+        
+        var cached = await _cache.GetAsync<PagedResult<EventSummaryDto>>(cacheKey,  cancellationToken);
+        if (cached is not null)
+            return cached;
+        
         var query = _context.Events
             .Include(e => e.Organizer)
             .Include(e => e.TicketTypes)
@@ -45,6 +53,10 @@ public class GetEventsQueryHandler : IRequestHandler<GetEventsQuery, PagedResult
                 e.TicketTypes.Sum(tt => tt.TotalQuantity - tt.SoldQuantity)))
             .ToListAsync(cancellationToken);
         
-        return new PagedResult<EventSummaryDto>(items, totalCount, request.Page, request.PageSize);
+        var result = new PagedResult<EventSummaryDto>(items, totalCount, request.Page, request.PageSize);
+        
+        await _cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5), cancellationToken);
+        
+        return result;
     }
 }

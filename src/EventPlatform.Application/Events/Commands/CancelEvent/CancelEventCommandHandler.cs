@@ -9,11 +9,13 @@ public class CancelEventCommandHandler : IRequestHandler<CancelEventCommand>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICacheService _cache;
 
-    public CancelEventCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
+    public CancelEventCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService, ICacheService cache)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _cache = cache;
     }
 
     public async Task Handle(CancelEventCommand request, CancellationToken cancellationToken)
@@ -39,5 +41,7 @@ public class CancelEventCommandHandler : IRequestHandler<CancelEventCommand>
         }
         
         await _context.SaveChangesAsync(cancellationToken);
+        
+        await _cache.RemoveByPatternAsync("events:list:", cancellationToken);
     }
 }

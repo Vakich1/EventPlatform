@@ -8,11 +8,13 @@ public class CreateEventCommandHandler : IRequestHandler<CreateEventCommand, Gui
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICacheService _cache;
     
-    public CreateEventCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
+    public CreateEventCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService,  ICacheService cache)
     {
         _context  = context;
         _currentUserService = currentUserService;
+        _cache = cache;
     }
 
     public async Task<Guid> Handle(CreateEventCommand request, CancellationToken cancellationToken)
@@ -27,6 +29,8 @@ public class CreateEventCommandHandler : IRequestHandler<CreateEventCommand, Gui
         
         _context.Events.Add(@event);
         await _context.SaveChangesAsync(cancellationToken);
+        
+        await _cache.RemoveByPatternAsync("events:list:", cancellationToken);
         
         return @event.Id;
     }

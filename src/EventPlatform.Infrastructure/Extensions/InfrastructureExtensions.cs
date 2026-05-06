@@ -7,6 +7,7 @@ using EventPlatform.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 using Stripe;
 
 namespace EventPlatform.Infrastructure.Extensions;
@@ -26,6 +27,11 @@ public static class InfrastructureExtensions
         StripeConfiguration.ApiKey = configuration["StripeSettings:SecretKey"];
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddHostedService<EventStatusUpdateService>();
+        
+        var redisConnection = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+        services.AddSingleton<IConnectionMultiplexer>(
+            ConnectionMultiplexer.Connect(redisConnection));
+        services.AddScoped<ICacheService, CacheService>();
         
         return services;
     }

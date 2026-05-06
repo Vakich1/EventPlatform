@@ -9,11 +9,13 @@ public class UpdateEventCommandHandler : IRequestHandler<UpdateEventCommand>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICacheService _cache;
 
-    public UpdateEventCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
+    public UpdateEventCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService,  ICacheService cache)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _cache = cache;
     }
 
     public async Task Handle(UpdateEventCommand request, CancellationToken cancellationToken)
@@ -34,5 +36,7 @@ public class UpdateEventCommandHandler : IRequestHandler<UpdateEventCommand>
             request.EndDate);
         
         await _context.SaveChangesAsync(cancellationToken);
+        
+        await _cache.RemoveByPatternAsync("events:list:", cancellationToken);
     }
 }
