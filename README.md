@@ -1,6 +1,6 @@
 # EventPlatform
 
-A full-stack event management platform built with ASP.NET Core 8 and Next.js 14.
+A full-stack event management platform built with ASP.NET Core 10 and Next.js 14.
 
 ## Features
 
