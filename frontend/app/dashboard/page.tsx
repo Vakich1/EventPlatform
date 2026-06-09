@@ -1,36 +1,60 @@
-'use client'
+'use client';
 
-import {useRouter} from "next/navigation";
-import {useAuth} from "@/context/AuthContext";
-import {useEffect, useState} from "react";
-import {EventSummary, PagedResult} from "@/types";
-import api from "@/lib/api";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {  Plus } from 'lucide-react';
-import Navbar from "@/components/Navbar";
-import DashboardEventCardSkeleton from "@/components/DashboardEventCardSkeleton";
-import DashboardEventCard from "@/components/DashboardEventCard";
-import Pagination from "@/components/Pagination";
+import { useAuth } from '@/context/AuthContext';
+import { EventSummary, MyRegistration, PagedResult } from '@/types';
+import api from '@/lib/api';
+import Navbar from '@/components/Navbar';
+import DashboardEventCard from '@/components/DashboardEventCard';
+import DashboardEventCardSkeleton from '@/components/DashboardEventCardSkeleton';
+import RegistrationCard from '@/components/RegistrationCard';
+import RegistrationCardSkeleton from '@/components/RegistrationCardSkeleton';
+import Pagination from '@/components/Pagination';
+import { Plus } from 'lucide-react';
+
+// Тип активной вкладки
+type Tab = 'events' | 'registrations';
 
 export default function DashboardPage() {
     const router = useRouter();
-    const { isAuthenticated, isLoading: authLoading, logout} = useAuth();
+    const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+    const [activeTab, setActiveTab] = useState<Tab>('events');
+
     const [events, setEvents] = useState<PagedResult<EventSummary> | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [registrations, setRegistrations] = useState<PagedResult<MyRegistration> | null>(null);
+    const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+    const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
 
     const loadEvents = async (page: number) => {
-        setIsLoading(true);
+        setIsLoadingEvents(true);
         try {
-            const response = await api.get<PagedResult<EventSummary>>("/events/my", {
-                params: { page, pageSize: 10 } ,
+            const response = await api.get<PagedResult<EventSummary>>('/events/my', {
+                params: { page, pageSize: 10 },
             });
             setEvents(response.data);
         } catch (error) {
             console.error(error);
         } finally {
-            setIsLoading(false);
+            setIsLoadingEvents(false);
         }
-    }
+    };
+
+    const loadRegistrations = async (page: number) => {
+        setIsLoadingRegistrations(true);
+        try {
+            const response = await api.get<PagedResult<MyRegistration>>('/registrations/my', {
+                params: { page, pageSize: 10 },
+            });
+            setRegistrations(response.data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoadingRegistrations(false);
+        }
+    };
 
     useEffect(() => {
         if (!authLoading && isAuthenticated) {
@@ -41,10 +65,15 @@ export default function DashboardPage() {
         }
     }, [isAuthenticated, authLoading]);
 
-    const handleLogout = () => {
-        logout();
-        router.push("/");
-    };
+    // При переключении на вкладку регистраций загружаем данные если ещё не загружены
+    useEffect(() => {
+        if (activeTab === 'registrations' && !registrations) {
+            const load = async () => {
+                await loadRegistrations(1);
+            };
+            load();
+        }
+    }, [activeTab]);
 
     if (authLoading) return null;
 
@@ -53,41 +82,123 @@ export default function DashboardPage() {
             <Navbar />
 
             <div className="max-w-6xl mx-auto px-4 py-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">My Events</h1>
-
-                {isLoading ? (
-                    <div className="space-y-3">
-                        {[...Array(3)].map((_, i) => (
-                            <DashboardEventCardSkeleton key={i} />
-                        ))}
-                    </div>
-                ) : events?.items.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-                        <p className="text-gray-500 mb-4">You haven&#39;t created any events yet.</p>
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                    {activeTab === 'events' && (
                         <Link
                             href="/events/create"
-                            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                         >
                             <Plus className="w-4 h-4" />
-                            Create your first event
+                            Create Event
                         </Link>
-                    </div>
-                ) : (
-                    <>
-                        <div className="space-y-3">
-                            {events?.items.map((event) => (
-                                <DashboardEventCard key={event.id} event={event} />
-                            ))}
-                        </div>
+                    )}
+                </div>
 
-                        {events && (
-                            <Pagination
-                                page={events.page}
-                                totalPages={events.totalPages}
-                                hasNextPage={events.hasNextPage}
-                                hasPreviousPage={events.hasPreviousPage}
-                                onPageChange={loadEvents}
-                            />
+                {/* Вкладки */}
+                <div className="flex border-b border-gray-200 mb-6">
+                    <button
+                        onClick={() => setActiveTab('events')}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                            activeTab === 'events'
+                                ? 'border-blue-600 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        My Events
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('registrations')}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                            activeTab === 'registrations'
+                                ? 'border-blue-600 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        My Registrations
+                    </button>
+                </div>
+
+                {/* Контент вкладки My Events */}
+                {activeTab === 'events' && (
+                    <>
+                        {isLoadingEvents ? (
+                            <div className="space-y-3">
+                                {[...Array(3)].map((_, i) => (
+                                    <DashboardEventCardSkeleton key={i} />
+                                ))}
+                            </div>
+                        ) : events?.items.length === 0 ? (
+                            <div className="text-center py-16 bg-white rounded-xl shadow-sm">
+                                <p className="text-gray-500 mb-4">You haven&#39;t created any events yet.</p>
+                                <Link
+                                    href="/events/create"
+                                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Create your first event
+                                </Link>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="space-y-3">
+                                    {events?.items.map((event) => (
+                                        <DashboardEventCard key={event.id} event={event} />
+                                    ))}
+                                </div>
+                                {events && (
+                                    <Pagination
+                                        page={events.page}
+                                        totalPages={events.totalPages}
+                                        hasNextPage={events.hasNextPage}
+                                        hasPreviousPage={events.hasPreviousPage}
+                                        onPageChange={loadEvents}
+                                    />
+                                )}
+                            </>
+                        )}
+                    </>
+                )}
+
+                {/* Контент вкладки My Registrations */}
+                {activeTab === 'registrations' && (
+                    <>
+                        {isLoadingRegistrations ? (
+                            <div className="space-y-3">
+                                {[...Array(3)].map((_, i) => (
+                                    <RegistrationCardSkeleton key={i} />
+                                ))}
+                            </div>
+                        ) : registrations?.items.length === 0 ? (
+                            <div className="text-center py-16 bg-white rounded-xl shadow-sm">
+                                <p className="text-gray-500 mb-4">You haven't registered for any events yet.</p>
+                                <Link
+                                    href="/"
+                                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                                >
+                                    Browse Events
+                                </Link>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="space-y-3">
+                                    {registrations?.items.map((registration) => (
+                                        <RegistrationCard
+                                            key={registration.registrationId}
+                                            registration={registration}
+                                        />
+                                    ))}
+                                </div>
+                                {registrations && (
+                                    <Pagination
+                                        page={registrations.page}
+                                        totalPages={registrations.totalPages}
+                                        hasNextPage={registrations.hasNextPage}
+                                        hasPreviousPage={registrations.hasPreviousPage}
+                                        onPageChange={loadRegistrations}
+                                    />
+                                )}
+                            </>
                         )}
                     </>
                 )}

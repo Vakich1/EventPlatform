@@ -51,3 +51,16 @@ export interface UserRegistration {
     ticketTypeId: string;
     ticketTypeName: string;
 }
+
+export interface MyRegistration {
+    registrationId: string;
+    eventId: string;
+    eventTitle: string;
+    eventLocation: string;
+    eventStartDate: string;
+    eventStatus: string;
+    ticketTypeName: string;
+    ticketPrice: number;
+    isFree: boolean;
+    ticketStatus: string;
+}
