@@ -1,4 +1,5 @@
 using EventPlatform.Domain.Common;
+using EventPlatform.Domain.Enums;
 using EventPlatform.Domain.Exceptions;
 
 namespace EventPlatform.Domain.Entities;
@@ -9,6 +10,8 @@ public class User : BaseEntity
     public string PasswordHash { get; private set; } =  string.Empty;
     public string FirstName { get; private set; } =  string.Empty;
     public string LastName { get; private set; } =  string.Empty;
+    public UserRole Role { get; private set; } = UserRole.User;
+    public bool IsBlocked { get; private set; }
     public string? RefreshToken { get; private set; }
     public DateTime? RefreshTokenExpiresAt { get; private set; }
 
@@ -32,6 +35,30 @@ public class User : BaseEntity
             FirstName = firstName.Trim(),
             LastName = lastName.Trim(),
         };
+    }
+    
+    public void SetRole(UserRole role)
+    {
+        Role = role;
+        SetUpdatedAt();
+    }
+    
+    public void Block()
+    {
+        if (IsBlocked)
+            throw new DomainException("User is already blocked.");
+
+        IsBlocked = true;
+        SetUpdatedAt();
+    }
+
+    public void Unblock()
+    {
+        if (!IsBlocked)
+            throw new DomainException("User is not blocked.");
+
+        IsBlocked = false;
+        SetUpdatedAt();
     }
 
     public void SetRefreshToken(string token, DateTime expiresAt)

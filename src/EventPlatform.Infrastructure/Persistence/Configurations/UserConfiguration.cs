@@ -26,6 +26,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(100);
         
+        builder.Property(u => u.Role)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+        
+        builder.Property(u => u.IsBlocked)
+            .HasDefaultValue(false);
+        
         builder.HasMany(u => u.OrganizedEvents)
             .WithOne(e => e.Organizer)
             .HasForeignKey(e => e.OrganizerId)

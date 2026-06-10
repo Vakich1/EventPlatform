@@ -171,7 +171,7 @@ export default function DashboardPage() {
                             </div>
                         ) : registrations?.items.length === 0 ? (
                             <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-                                <p className="text-gray-500 mb-4">You haven't registered for any events yet.</p>
+                                <p className="text-gray-500 mb-4">You haven&#39;t registered for any events yet.</p>
                                 <Link
                                     href="/"
                                     className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
