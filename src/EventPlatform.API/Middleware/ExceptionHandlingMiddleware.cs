@@ -30,6 +30,10 @@ public class ExceptionHandlingMiddleware
         {
             await HandleDomainExceptionAsync(context, ex);
         }
+        catch (ForbiddenException ex)
+        {
+            await HandleForbiddenExceptionAsync(context, ex);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred.");
@@ -55,6 +59,15 @@ public class ExceptionHandlingMiddleware
     private static async Task HandleDomainExceptionAsync(HttpContext context, DomainException ex)
     {
         context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        context.Response.ContentType = "application/json";
+
+        var response = new { error = ex.Message };
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+    }
+    
+    private static async Task HandleForbiddenExceptionAsync(HttpContext context, ForbiddenException ex)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
         context.Response.ContentType = "application/json";
 
         var response = new { error = ex.Message };
