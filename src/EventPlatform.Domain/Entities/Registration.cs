@@ -13,7 +13,7 @@ public class Registration : BaseEntity
     public Guid TicketTypeId {get; private set;}
     public TicketType TicketType { get; private set; } = null!;
 
-    public Ticket Ticket { get; private set; } = null!;
+    public Ticket? Ticket { get; private set; }
     public Payment? Payment { get; private set; }
     
     private Registration() { }
