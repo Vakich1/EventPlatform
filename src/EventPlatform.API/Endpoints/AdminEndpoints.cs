@@ -1,6 +1,7 @@
 using EventPlatform.Application.Admin.Queries.GetAllUsers;
 using EventPlatform.Application.Admin.Commands.BlockUser;
 using EventPlatform.Application.Admin.Commands.UnblockUser;
+using EventPlatform.Application.Admin.Queries.GetStats;
 using MediatR;
 
 namespace EventPlatform.API.Endpoints;
@@ -49,5 +50,15 @@ public static class AdminEndpoints
             })
             .WithName("UnblockUser")
             .WithSummary("Unblock user (Admin only)");
+        
+        group.MapGet("/stats", async (
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new GetStatsQuery(), cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("GetStats")
+            .WithSummary("Get platform statistics (Admin only)");
     }
 }
