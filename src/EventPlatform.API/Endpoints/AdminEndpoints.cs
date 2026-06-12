@@ -2,6 +2,7 @@ using EventPlatform.Application.Admin.Queries.GetAllUsers;
 using EventPlatform.Application.Admin.Commands.BlockUser;
 using EventPlatform.Application.Admin.Commands.CancelEventByAdmin;
 using EventPlatform.Application.Admin.Commands.UnblockUser;
+using EventPlatform.Application.Admin.Queries.GetAllEvents;
 using EventPlatform.Application.Admin.Queries.GetStats;
 using MediatR;
 
@@ -72,5 +73,21 @@ public static class AdminEndpoints
             })
             .WithName("CancelEventByAdmin")
             .WithSummary("Cancel any event (Admin only)");
+        
+        group.MapGet("/events", async (
+                ISender sender,
+                CancellationToken cancellationToken,
+                string? searchTerm = null,
+                string? status = null,
+                int page = 1,
+                int pageSize = 20) =>
+            {
+                var result = await sender.Send(
+                    new GetAllEventsQuery(searchTerm, status, page, pageSize),
+                    cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("GetAllEvents")
+            .WithSummary("Get all events (Admin only)");
     }
 }
