@@ -25,7 +25,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         if (user is null)
             throw new DomainException("Invalid refresh token.");
 
-        if (user.RefreshTokenExpiresAt < DateTime.Now)
+        if (user.RefreshTokenExpiresAt < DateTime.UtcNow)
             throw new DomainException("Refresh token has expired.");
 
         var accessToken = _jwtService.GenerateAccessToken(user);
