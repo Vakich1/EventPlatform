@@ -25,6 +25,9 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, AuthRes
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new DomainException("Invalid email or password.");
         
+        if (user.IsBlocked)
+            throw new DomainException("Your account has been blocked. Please contact support.");
+        
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();
         var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);

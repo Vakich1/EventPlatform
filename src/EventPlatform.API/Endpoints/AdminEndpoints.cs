@@ -1,4 +1,6 @@
 using EventPlatform.Application.Admin.Queries.GetAllUsers;
+using EventPlatform.Application.Admin.Commands.BlockUser;
+using EventPlatform.Application.Admin.Commands.UnblockUser;
 using MediatR;
 
 namespace EventPlatform.API.Endpoints;
@@ -25,5 +27,27 @@ public static class AdminEndpoints
             })
             .WithName("GetAllUsers")
             .WithSummary("Get all users (Admin only)");
+        
+        group.MapPost("/users/{userId:guid}/block", async (
+                Guid userId,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                await sender.Send(new BlockUserCommand(userId), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithName("BlockUser")
+            .WithSummary("Block user (Admin only)");
+
+        group.MapPost("/users/{userId:guid}/unblock", async (
+                Guid userId,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                await sender.Send(new UnblockUserCommand(userId), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithName("UnblockUser")
+            .WithSummary("Unblock user (Admin only)");
     }
 }
