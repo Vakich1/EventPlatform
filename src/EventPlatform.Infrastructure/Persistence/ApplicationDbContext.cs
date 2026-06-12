@@ -20,4 +20,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }
+
+    public async Task<int> IncrementSoldQuantityAsync(Guid ticketTypeId, CancellationToken cancellationToken = default)
+    {
+        return await Database.ExecuteSqlRawAsync(
+            "UPDATE \"TicketTypes\" SET \"SoldQuantity\" = \"SoldQuantity\" + 1 WHERE \"Id\" = {0} AND \"SoldQuantity\" < \"TotalQuantity\"",
+            cancellationToken,
+            ticketTypeId);
+    }
 }

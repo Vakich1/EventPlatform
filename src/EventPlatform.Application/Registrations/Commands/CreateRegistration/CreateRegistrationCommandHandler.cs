@@ -42,9 +42,6 @@ public class CreateRegistrationCommandHandler : IRequestHandler<CreateRegistrati
         
         if (ticketType is null)
             throw new DomainException("Ticket type not found");
-
-        if (ticketType.AvailableQuantity <= 0)
-            throw new DomainException("No tickets available for this ticket type.");
         
         if (!ticketType.IsFree)
             throw new DomainException("This ticket type requires payment. Use the payment endpoint.");
@@ -68,8 +65,10 @@ public class CreateRegistrationCommandHandler : IRequestHandler<CreateRegistrati
             request.TicketTypeId);
 
         _context.Registrations.Add(registration);
-        
-        ticketType.IncrementSold();
+
+        var affectedRows = await _context.IncrementSoldQuantityAsync(request.TicketTypeId, cancellationToken);
+        if (affectedRows == 0)
+            throw new DomainException("No tickets available for this ticket type.");
 
         var qrCode = _qrCodeService.Generate(registration.Id.ToString());
         var ticket = Ticket.Create(registration.Id, qrCode);
@@ -77,13 +76,20 @@ public class CreateRegistrationCommandHandler : IRequestHandler<CreateRegistrati
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        await _emailService.SendTicketConfirmationAsync(
-            user.Email,
-            user.FullName,
-            @event.Title,
-            @event.StartDate,
-            qrCode,
-            cancellationToken);
+        try
+        {
+            await _emailService.SendTicketConfirmationAsync(
+                user.Email,
+                user.FullName,
+                @event.Title,
+                @event.StartDate,
+                qrCode,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Email failure should not break the registration
+        }
         
         return registration.Id;
     }

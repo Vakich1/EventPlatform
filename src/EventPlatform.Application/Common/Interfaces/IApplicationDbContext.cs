@@ -13,4 +13,5 @@ public interface IApplicationDbContext
     DbSet<Payment> Payments { get; }
     
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<int> IncrementSoldQuantityAsync(Guid ticketTypeId, CancellationToken cancellationToken = default);
 }
