@@ -1,6 +1,7 @@
 using EventPlatform.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Stripe;
 
 namespace EventPlatform.Infrastructure.Services;
@@ -11,17 +12,20 @@ public class PaymentService : IPaymentService
     private readonly IApplicationDbContext _context;
     private readonly IQrCodeService _qrCodeService;
     private readonly IEmailService _emailService;
+    private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
         IConfiguration configuration,
         IApplicationDbContext context,
         IQrCodeService qrCodeService,
-        IEmailService emailService)
+        IEmailService emailService,
+        ILogger<PaymentService> logger)
     {
         _configuration = configuration;
         _context = context;
         _qrCodeService = qrCodeService;
         _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<string> CreatePaymentIntentAsync(decimal amount, string currency, Guid registrationId)
@@ -107,9 +111,9 @@ public class PaymentService : IPaymentService
                 qrCode,
                 cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
-            // Email failure should not break payment processing
+            _logger.LogError(ex, "Failed to send ticket confirmation email for payment {PaymentIntentId}", paymentIntentId);
         }
     }
 }

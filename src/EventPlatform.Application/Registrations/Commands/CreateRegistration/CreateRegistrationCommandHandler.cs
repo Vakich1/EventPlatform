@@ -76,20 +76,13 @@ public class CreateRegistrationCommandHandler : IRequestHandler<CreateRegistrati
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        try
-        {
-            await _emailService.SendTicketConfirmationAsync(
-                user.Email,
-                user.FullName,
-                @event.Title,
-                @event.StartDate,
-                qrCode,
-                cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            // Email failure should not break the registration
-        }
+        await _emailService.SendTicketConfirmationAsync(
+            user.Email,
+            user.FullName,
+            @event.Title,
+            @event.StartDate,
+            qrCode,
+            cancellationToken);
         
         return registration.Id;
     }
