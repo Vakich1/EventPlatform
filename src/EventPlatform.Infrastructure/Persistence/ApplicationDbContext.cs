@@ -25,7 +25,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         return await Database.ExecuteSqlRawAsync(
             "UPDATE \"TicketTypes\" SET \"SoldQuantity\" = \"SoldQuantity\" + 1 WHERE \"Id\" = {0} AND \"SoldQuantity\" < \"TotalQuantity\"",
-            cancellationToken,
-            new object[] { ticketTypeId });
+            ticketTypeId);
     }
 }
