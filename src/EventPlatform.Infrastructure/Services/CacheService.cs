@@ -1,6 +1,5 @@
 using System.Text.Json;
 using EventPlatform.Application.Common.Interfaces;
-using Newtonsoft.Json;
 using StackExchange.Redis;
 
 namespace EventPlatform.Infrastructure.Services;
