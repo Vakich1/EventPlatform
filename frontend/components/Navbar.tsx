@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, Shield } from 'lucide-react';
 
 export default function Navbar() {
-    const { isAuthenticated, isLoading, logout } = useAuth();
+    const { isAuthenticated, isLoading, role, logout } = useAuth();
     const router = useRouter();
 
     const handleLogout = () => {
@@ -37,6 +37,14 @@ export default function Navbar() {
                                 >
                                     Dashboard
                                 </Link>
+                                {role === 'Admin' && (
+                                    <Link
+                                        href="/admin"
+                                        className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+                                    >
+                                        Admin
+                                    </Link>
+                                )}
                                 <button
                                     onClick={handleLogout}
                                     className="text-sm text-gray-600 hover:text-gray-900 cursor-pointer"

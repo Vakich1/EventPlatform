@@ -64,3 +64,26 @@ export interface MyRegistration {
     isFree: boolean;
     ticketStatus: string;
 }
+
+export interface AdminStats {
+    totalUsers: number;
+    blockedUsers: number;
+    totalEvents: number;
+    publishedEvents: number;
+    cancelledEvents: number;
+    completedEvents: number;
+    draftEvents: number;
+    totalRegistrations: number;
+    totalRevenue: number;
+}
+
+export interface AdminUser {
+    id: string;
+    email: string;
+    fullName: string;
+    role: string;
+    isBlocked: boolean;
+    createdAt: string;
+    eventsCount: number;
+    registrationsCount: number;
+}
