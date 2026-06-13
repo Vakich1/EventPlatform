@@ -1,5 +1,7 @@
 using EventPlatform.Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Stripe;
 
 namespace EventPlatform.Infrastructure.Services;
@@ -7,10 +9,23 @@ namespace EventPlatform.Infrastructure.Services;
 public class PaymentService : IPaymentService
 {
     private readonly IConfiguration _configuration;
+    private readonly IApplicationDbContext _context;
+    private readonly IQrCodeService _qrCodeService;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<PaymentService> _logger;
 
-    public PaymentService(IConfiguration configuration)
+    public PaymentService(
+        IConfiguration configuration,
+        IApplicationDbContext context,
+        IQrCodeService qrCodeService,
+        IEmailService emailService,
+        ILogger<PaymentService> logger)
     {
         _configuration = configuration;
+        _context = context;
+        _qrCodeService = qrCodeService;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<string> CreatePaymentIntentAsync(decimal amount, string currency, Guid registrationId)
@@ -57,5 +72,48 @@ public class PaymentService : IPaymentService
 
         var registrationId = paymentIntent.Metadata["registrationId"];
         return Guid.Parse(registrationId);
+    }
+
+    public async Task ProcessSuccessfulPaymentAsync(string paymentIntentId, CancellationToken cancellationToken = default)
+    {
+        var registrationId = await GetRegistrationIdFromPaymentIntent(paymentIntentId);
+
+        var registration = await _context.Registrations
+            .Include(r => r.User)
+            .Include(r => r.Event)
+            .Include(r => r.TicketType)
+            .Include(r => r.Payment)
+            .FirstOrDefaultAsync(r => r.Id == registrationId, cancellationToken);
+
+        if (registration is null || registration.Payment is null)
+            return;
+
+        registration.Payment.MarkAsSucceeded();
+        registration.Payment.SetStripeIntentId(paymentIntentId);
+
+        var affectedRows = await _context.IncrementSoldQuantityAsync(registration.TicketTypeId, cancellationToken);
+        if (affectedRows == 0)
+            return;
+
+        var qrCode = _qrCodeService.Generate(registration.Id.ToString());
+        var ticket = Domain.Entities.Ticket.Create(registration.Id, qrCode);
+        _context.Tickets.Add(ticket);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _emailService.SendTicketConfirmationAsync(
+                registration.User.Email,
+                registration.User.FullName,
+                registration.Event.Title,
+                registration.Event.StartDate,
+                qrCode,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send ticket confirmation email for payment {PaymentIntentId}", paymentIntentId);
+        }
     }
 }

@@ -1,15 +1,28 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AuthResult } from '@/types'
 import api from '@/lib/api';
 
 interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
+    role: string | null;
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
     logout: () => void;
+}
+
+function decodeRole(token: string): string | null {
+    try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        return decoded.role
+            || decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+            || null;
+    } catch {
+        return null;
+    }
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -17,10 +30,12 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [role, setRole] = useState<string | null>(null);
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         setIsAuthenticated(!!token);
+        setRole(token ? decodeRole(token) : null);
         setIsLoading(false);
     }, []);
 
@@ -33,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         document.cookie = `accessToken=${accessToken}; path=/; max-age=3600`;
 
         setIsAuthenticated(true);
+        setRole(decodeRole(accessToken));
     };
 
     const register = async (email: string, password: string, firstName: string, lastName: string) => {
@@ -49,17 +65,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         document.cookie = `accessToken=${accessToken}; path=/; max-age=3600`;
 
         setIsAuthenticated(true);
+        setRole(decodeRole(accessToken));
     };
 
-    const logout = () => {
+    const logout = useCallback(() => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         document.cookie = 'accessToken=; path=/; max-age=0';
         setIsAuthenticated(false);
-    };
+        setRole(null);
+    }, []);
     
     return (
-        <AuthContext.Provider value={ {isAuthenticated, isLoading, login, register, logout }}>
+        <AuthContext.Provider value={ {isAuthenticated, isLoading, role, login, register, logout }}>
             {children}
         </AuthContext.Provider>
     )

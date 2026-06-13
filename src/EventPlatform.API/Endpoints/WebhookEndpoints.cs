@@ -13,10 +13,9 @@ public static class WebhookEndpoints
             HttpRequest httpRequest,
             IPaymentService paymentService,
             IApplicationDbContext context,
-            IQrCodeService qrCodeService,
-            IEmailService emailService) =>
+            CancellationToken cancellationToken) =>
         {
-            var payload = await new StreamReader(httpRequest.Body).ReadToEndAsync();
+            var payload = await new StreamReader(httpRequest.Body).ReadToEndAsync(cancellationToken);
             var signature = httpRequest.Headers["Stripe-Signature"].ToString();
             
             var isValid = await paymentService.ValidateWebhookSignature(payload, signature);
@@ -31,31 +30,7 @@ public static class WebhookEndpoints
                 if (paymentIntent is null)
                     return Results.BadRequest();
                 
-                var registrationId = await paymentService.GetRegistrationIdFromPaymentIntent(paymentIntent.Id);
-                
-                var registration = await context.Registrations
-                    .Include(r => r.User)
-                    .Include(r => r.Event)
-                    .Include(r => r.TicketType)
-                    .Include(r => r.Payment)
-                    .FirstOrDefaultAsync(r => r.Id == registrationId);
-                
-                registration!.Payment!.MarkAsSucceeded();
-                registration.Payment.SetStripeIntentId(paymentIntent.Id);
-                registration.TicketType.IncrementSold();
-                
-                var qrCode = qrCodeService.Generate(registration.Id.ToString());
-                var ticket = Domain.Entities.Ticket.Create(registration.Id, qrCode);
-                context.Tickets.Add(ticket);
-                
-                await context.SaveChangesAsync();
-
-                await emailService.SendTicketConfirmationAsync(
-                    registration.User.Email,
-                    registration.User.FullName,
-                    registration.Event.Title,
-                    registration.Event.StartDate,
-                    qrCode);
+                await paymentService.ProcessSuccessfulPaymentAsync(paymentIntent.Id, cancellationToken);
             }
             
             if (stripeEvent.Type == "payment_intent.payment_failed")
@@ -69,7 +44,7 @@ public static class WebhookEndpoints
                 var registration = await context.Registrations
                     .Include(r => r.Payment)
                     .Include(r => r.TicketType)
-                    .FirstOrDefaultAsync(r => r.Id == registrationId);
+                    .FirstOrDefaultAsync(r => r.Id == registrationId, cancellationToken);
 
                 if (registration is null)
                     return Results.NotFound();
@@ -79,7 +54,7 @@ public static class WebhookEndpoints
                 
                 registration.Payment!.MarkAsFailed();
 
-                await context.SaveChangesAsync();
+                await context.SaveChangesAsync(cancellationToken);
             }
             
             if (stripeEvent.Type == "payment_intent.canceled")
@@ -93,7 +68,7 @@ public static class WebhookEndpoints
                 var registration = await context.Registrations
                     .Include(r => r.Payment)
                     .Include(r => r.TicketType)
-                    .FirstOrDefaultAsync(r => r.Id == registrationId);
+                    .FirstOrDefaultAsync(r => r.Id == registrationId, cancellationToken);
 
                 if (registration is null)
                     return Results.NotFound();
@@ -103,7 +78,7 @@ public static class WebhookEndpoints
                 
                 registration.Payment!.MarkAsFailed();
 
-                await context.SaveChangesAsync();
+                await context.SaveChangesAsync(cancellationToken);
             }
             
             return Results.Ok();

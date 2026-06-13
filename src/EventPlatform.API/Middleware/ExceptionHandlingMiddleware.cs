@@ -34,6 +34,10 @@ public class ExceptionHandlingMiddleware
         {
             await HandleForbiddenExceptionAsync(context, ex);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            await HandleUnauthorizedAccessExceptionAsync(context, ex);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred.");
@@ -68,6 +72,15 @@ public class ExceptionHandlingMiddleware
     private static async Task HandleForbiddenExceptionAsync(HttpContext context, ForbiddenException ex)
     {
         context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+        context.Response.ContentType = "application/json";
+
+        var response = new { error = ex.Message };
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+    }
+    
+    private static async Task HandleUnauthorizedAccessExceptionAsync(HttpContext context, UnauthorizedAccessException ex)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
         context.Response.ContentType = "application/json";
 
         var response = new { error = ex.Message };
