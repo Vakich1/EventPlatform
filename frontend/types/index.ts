@@ -50,6 +50,7 @@ export interface UserRegistration {
     registrationId: string;
     ticketTypeId: string;
     ticketTypeName: string;
+    ticketStatus: string;
 }
 
 export interface MyRegistration {
@@ -86,4 +87,26 @@ export interface AdminUser {
     createdAt: string;
     eventsCount: number;
     registrationsCount: number;
+}
+
+export interface AdminUserDetail {
+    id: string;
+    email: string;
+    fullName: string;
+    role: string;
+    isBlocked: boolean;
+    createdAt: string;
+    eventsCount: number;
+    registrationsCount: number;
+}
+
+export interface AdminRegistration {
+    registrationId: string;
+    eventId: string;
+    eventTitle: string;
+    ticketTypeName: string;
+    ticketPrice: number;
+    isFree: boolean;
+    ticketStatus: string;
+    createdAt: string;
 }
