@@ -46,12 +46,17 @@ public class CreateRegistrationCommandHandler : IRequestHandler<CreateRegistrati
         if (!ticketType.IsFree)
             throw new DomainException("This ticket type requires payment. Use the payment endpoint.");
 
-        var alreadyRegistered = await _context.Registrations
-            .AnyAsync(r => r.UserId == _currentUserService.UserId && r.TicketTypeId == request.TicketTypeId,
+        var alreadyRegisteredForEvent = await _context.Registrations
+            .Include(r => r.Ticket)
+            .AnyAsync(r => 
+                r.UserId == _currentUserService.UserId && 
+                r.EventId == request.EventId &&
+                r.Ticket != null && 
+                r.Ticket.Status != Domain.Enums.TicketStatus.Cancelled,
                 cancellationToken);
 
-        if (alreadyRegistered)
-            throw new DomainException("You are already registered for this ticket type.");
+        if (alreadyRegisteredForEvent)
+            throw new DomainException("You are already registered for this event.");
 
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == _currentUserService.UserId, cancellationToken);

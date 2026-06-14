@@ -10,7 +10,7 @@ public class RegistrationConfiguration : IEntityTypeConfiguration<Registration>
     {
         builder.HasKey(r => r.Id);
         
-        builder.HasIndex(r => new {r.UserId, r.TicketTypeId}).IsUnique();
+        builder.HasIndex(r => new {r.UserId, r.TicketTypeId});
         
         builder.HasOne(r => r.User)
             .WithMany()

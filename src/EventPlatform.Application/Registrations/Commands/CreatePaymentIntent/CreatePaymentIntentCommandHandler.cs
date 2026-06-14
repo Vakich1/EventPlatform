@@ -1,5 +1,6 @@
 using EventPlatform.Application.Common.Interfaces;
 using EventPlatform.Domain.Entities;
+using EventPlatform.Domain.Enums;
 using EventPlatform.Domain.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -44,12 +45,17 @@ public class CreatePaymentIntentCommandHandler : IRequestHandler<CreatePaymentIn
         if (ticketType.AvailableQuantity <= 0)
             throw new DomainException("No tickets available for this ticket type.");
 
-        var alreadyRegistered = await _context.Registrations
-            .AnyAsync(r => r.UserId == _currentUserService.UserId && r.TicketTypeId == request.TicketTypeId,
+        var alreadyRegisteredForEvent = await _context.Registrations
+            .Include(r => r.Ticket)
+            .AnyAsync(r => 
+                r.UserId == _currentUserService.UserId && 
+                r.EventId == request.EventId &&
+                r.Ticket != null && 
+                r.Ticket.Status != TicketStatus.Cancelled,
                 cancellationToken);
 
-        if (alreadyRegistered)
-            throw new DomainException("You are already registered for this ticket type.");
+        if (alreadyRegisteredForEvent)
+            throw new DomainException("You are already registered for this event.");
 
         var registration = Registration.Create(
             _currentUserService.UserId,

@@ -1,4 +1,5 @@
 using EventPlatform.Application.Common.Interfaces;
+using EventPlatform.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,9 +21,12 @@ public class GetUserRegistrationQueryHandler : IRequestHandler<GetUserRegistrati
     {
         var registration = await _context.Registrations
             .Include(r => r.TicketType)
+            .Include(r => r.Ticket)
             .FirstOrDefaultAsync(r =>
                     r.EventId == request.EventId &&
-                    r.UserId == _currentUserService.UserId,
+                    r.UserId == _currentUserService.UserId &&
+                    r.Ticket != null &&
+                    r.Ticket.Status != TicketStatus.Cancelled,
                     cancellationToken);
         
         if (registration is null)
@@ -31,6 +35,7 @@ public class GetUserRegistrationQueryHandler : IRequestHandler<GetUserRegistrati
         return new UserRegistrationDto(
             registration.Id,
             registration.TicketTypeId,
-            registration.TicketType.Name);
+            registration.TicketType.Name,
+            registration.Ticket?.Status.ToString() ?? "No Ticket");
     }
 }
