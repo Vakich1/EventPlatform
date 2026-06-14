@@ -8,6 +8,7 @@ import api from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import StatsCard from '@/components/StatsCard';
 import { Users, Calendar, Ticket, Ban, CheckCircle, Clock, XCircle, FileText, ArrowLeft, UserCog, CalendarX } from 'lucide-react';
+import { goBack } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -44,7 +45,7 @@ export default function AdminPage() {
 
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => goBack('/dashboard')}
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />

@@ -10,6 +10,7 @@ import Pagination from '@/components/Pagination';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { formatDate, getStatusColor } from '@/lib/utils';
 import { Search, XCircle, Calendar, MapPin, Ticket, ArrowLeft } from 'lucide-react';
+import { goBack } from '@/lib/utils';
 import Link from 'next/link';
 
 const STATUS_OPTIONS = ['All', 'Draft', 'Published', 'Completed', 'Cancelled'];
@@ -98,7 +99,7 @@ export default function AdminEventsPage() {
 
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => goBack('/admin')}
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />

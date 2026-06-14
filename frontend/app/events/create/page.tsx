@@ -7,6 +7,7 @@ import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import api from "@/lib/api";
 import Navbar from "@/components/Navbar";
+import { goBack } from '@/lib/utils';
 
 const createEventSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200),
@@ -155,8 +156,8 @@ export default function CreateEventPage() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => router.back()}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+                                onClick={() => goBack('/dashboard')}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
                             >
                                 Cancel
                             </button>

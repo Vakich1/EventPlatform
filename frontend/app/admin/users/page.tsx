@@ -9,7 +9,9 @@ import Navbar from '@/components/Navbar';
 import Pagination from '@/components/Pagination';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { formatDate } from '@/lib/utils';
-import { Search, Ban, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Search, Ban, CheckCircle, ArrowLeft, Eye } from 'lucide-react';
+import Link from 'next/link';
+import { goBack } from '@/lib/utils';
 
 export default function AdminUsersPage() {
     const router = useRouter();
@@ -94,7 +96,7 @@ export default function AdminUsersPage() {
 
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => goBack('/admin')}
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -181,25 +183,34 @@ export default function AdminUsersPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                {user.role !== 'Admin' && (
-                                                    user.isBlocked ? (
-                                                        <button
-                                                            onClick={() => setConfirmAction({ type: 'unblock', userId: user.id, userName: user.fullName })}
-                                                            className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 cursor-pointer ml-auto"
-                                                        >
-                                                            <CheckCircle className="w-4 h-4" />
-                                                            Unblock
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => setConfirmAction({ type: 'block', userId: user.id, userName: user.fullName })}
-                                                            className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 cursor-pointer ml-auto"
-                                                        >
-                                                            <Ban className="w-4 h-4" />
-                                                            Block
-                                                        </button>
-                                                    )
-                                                )}
+                                                <div className="flex items-center gap-2 justify-end">
+                                                    <Link
+                                                        href={`/admin/users/${user.id}`}
+                                                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                        View
+                                                    </Link>
+                                                    {user.role !== 'Admin' && (
+                                                        user.isBlocked ? (
+                                                            <button
+                                                                onClick={() => setConfirmAction({ type: 'unblock', userId: user.id, userName: user.fullName })}
+                                                                className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 cursor-pointer"
+                                                            >
+                                                                <CheckCircle className="w-4 h-4" />
+                                                                Unblock
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => setConfirmAction({ type: 'block', userId: user.id, userName: user.fullName })}
+                                                                className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 cursor-pointer"
+                                                            >
+                                                                <Ban className="w-4 h-4" />
+                                                                Block
+                                                            </button>
+                                                        )
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

@@ -22,3 +22,11 @@ export function getStatusColor(status: string) {
         default: return 'bg-gray-100 text-gray-600';
     }
 }
+
+export function goBack(fallback: string = '/') {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = fallback;
+    }
+}

@@ -7,7 +7,7 @@ import {EventDetail, UserRegistration} from "@/types";
 import api from "@/lib/api";
 import { Calendar, MapPin, Ticket, ArrowLeft, Users } from 'lucide-react';
 import Navbar from "@/components/Navbar";
-import { formatDate, getStatusColor } from '@/lib/utils';
+import { formatDate, getStatusColor, goBack } from '@/lib/utils';
 import EventDetailSkeleton from "@/components/EventDetailSkeleton";
 import PaymentModal from '@/components/PaymentModal';
 
@@ -107,7 +107,7 @@ export default function EventDetailPage () {
 
             <div className="max-w-5xl mx-auto px-4 py-8">
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => goBack('/')}
                     className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -195,11 +195,11 @@ export default function EventDetailPage () {
                                             disabled={
                                                 ticketType.availableQuantity === 0 ||
                                                 registeringTicketId === ticketType.id ||
-                                                !!userRegistration
+                                                userRegistration?.ticketStatus === 'Active'
                                             }
                                             className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                         >
-                                            {userRegistration?.ticketTypeId === ticketType.id
+                                            {userRegistration?.ticketTypeId === ticketType.id && userRegistration?.ticketStatus === 'Active'
                                                 ? '✓ Registered'
                                                 : registeringTicketId === ticketType.id
                                                     ? 'Processing...'
