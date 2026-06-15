@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -58,7 +58,7 @@ namespace EventPlatform.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TicketsTypes",
+                name: "TicketTypes",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -72,9 +72,9 @@ namespace EventPlatform.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TicketsTypes", x => x.Id);
+                    table.PrimaryKey("PK_TicketTypes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TicketsTypes_Events_EventId",
+                        name: "FK_TicketTypes_Events_EventId",
                         column: x => x.EventId,
                         principalTable: "Events",
                         principalColumn: "Id",
@@ -102,9 +102,9 @@ namespace EventPlatform.Infrastructure.Persistence.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Registrations_TicketsTypes_TicketTypeId",
+                        name: "FK_Registrations_TicketTypes_TicketTypeId",
                         column: x => x.TicketTypeId,
-                        principalTable: "TicketsTypes",
+                        principalTable: "TicketTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -195,8 +195,8 @@ namespace EventPlatform.Infrastructure.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_TicketsTypes_EventId",
-                table: "TicketsTypes",
+                name: "IX_TicketTypes_EventId",
+                table: "TicketTypes",
                 column: "EventId");
 
             migrationBuilder.CreateIndex(
@@ -219,7 +219,7 @@ namespace EventPlatform.Infrastructure.Persistence.Migrations
                 name: "Registrations");
 
             migrationBuilder.DropTable(
-                name: "TicketsTypes");
+                name: "TicketTypes");
 
             migrationBuilder.DropTable(
                 name: "Events");

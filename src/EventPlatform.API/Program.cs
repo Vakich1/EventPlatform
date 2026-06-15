@@ -2,6 +2,8 @@ using EventPlatform.API.Endpoints;
 using EventPlatform.API.Middleware;
 using EventPlatform.Application.Extensions;
 using EventPlatform.Infrastructure.Extensions;
+using EventPlatform.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,6 +52,13 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await context.Database.MigrateAsync();
+    await DbSeeder.SeedAsync(context);
+}
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("Frontend");

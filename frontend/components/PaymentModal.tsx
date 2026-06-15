@@ -65,7 +65,8 @@ export default function PaymentModal({
         setIsProcessing(true);
 
         try {
-            const intentResponse = await fetch('http://localhost:5220/api/registrations/payment-intent', {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5220';
+            const intentResponse = await fetch(`${apiUrl}/api/registrations/payment-intent`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -81,7 +82,7 @@ export default function PaymentModal({
 
             const { clientSecret } = await intentResponse.json();
 
-            const confirmResponse = await fetch('http://localhost:5220/api/payments/confirm', {
+            const confirmResponse = await fetch(`${apiUrl}/api/payments/confirm`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

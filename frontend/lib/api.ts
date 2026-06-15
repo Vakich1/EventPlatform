@@ -1,8 +1,10 @@
 import axios from "axios";
 import {AuthResult} from "@/types";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5220';
+
 const api = axios.create({
-    baseURL: "http://localhost:5220/api",
+    baseURL: `${API_URL}/api`,
     headers: {
         "Content-Type": "application/json",
     }
@@ -34,7 +36,7 @@ api.interceptors.response.use(
 
             try {
                 const refreshResponse = await axios.post<AuthResult>(
-                    'http://localhost:5220/api/auth/refresh-token',
+                    `${API_URL}/api/auth/refresh-token`,
                     { refreshToken: token }
                 );
 
