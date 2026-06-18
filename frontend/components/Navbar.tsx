@@ -24,13 +24,15 @@ export default function Navbar() {
                     <div className="flex items-center gap-4">
                         {isAuthenticated ? (
                             <>
-                                <Link
-                                    href="/events/create"
-                                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Create Event
-                                </Link>
+                                {(role === 'Organizer' || role === 'Admin') && (
+                                    <Link
+                                        href="/events/create"
+                                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Create Event
+                                    </Link>
+                                )}
                                 <Link
                                     href="/dashboard"
                                     className="text-sm text-gray-600 hover:text-gray-900"

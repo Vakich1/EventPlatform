@@ -12,6 +12,8 @@ public class User : BaseEntity
     public string LastName { get; private set; } =  string.Empty;
     public UserRole Role { get; private set; } = UserRole.User;
     public bool IsBlocked { get; private set; }
+    public bool IsApprovedOrganizer { get; private set; }
+    public DateTime? OrganizerApprovedAt { get; private set; }
     public string? RefreshToken { get; private set; }
     public DateTime? RefreshTokenExpiresAt { get; private set; }
 
@@ -58,6 +60,30 @@ public class User : BaseEntity
             throw new DomainException("User is not blocked.");
 
         IsBlocked = false;
+        SetUpdatedAt();
+    }
+    
+    public void ApproveAsOrganizer()
+    {
+        if (Role != UserRole.Organizer)
+            throw new DomainException("User is not an organizer.");
+        
+        if (IsApprovedOrganizer)
+            throw new DomainException("Organizer is already approved.");
+        
+        IsApprovedOrganizer = true;
+        OrganizerApprovedAt = DateTime.UtcNow;
+        SetUpdatedAt();
+    }
+    
+    public void RejectOrganizerRequest()
+    {
+        if (Role != UserRole.Organizer)
+            throw new DomainException("User is not an organizer.");
+        
+        Role = UserRole.User;
+        IsApprovedOrganizer = false;
+        OrganizerApprovedAt = null;
         SetUpdatedAt();
     }
 

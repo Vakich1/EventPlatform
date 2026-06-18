@@ -18,6 +18,7 @@ const registerSchema = z.object({
         .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
         .regex(/[0-9]/, 'Password must contain at least one number'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
+    role: z.enum(['User', 'Organizer']),
 }).refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
@@ -40,7 +41,7 @@ export default function RegisterPage() {
         setIsLoading(true);
         setError(null);
         try {
-            await registerUser(data.email, data.password, data.firstName, data.lastName);
+            await registerUser(data.email, data.password, data.firstName, data.lastName, data.role);
             router.push('/');
         } catch {
             setError('Registration failed. Email may already be in use.');
@@ -135,6 +136,35 @@ export default function RegisterPage() {
                         {errors.confirmPassword && (
                             <p className="mt-1 text-xs text-red-500">{errors.confirmPassword.message}</p>
                         )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Account type
+                        </label>
+                        <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    value="User"
+                                    {...register('role')}
+                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-700">Regular User</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    value="Organizer"
+                                    {...register('role')}
+                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-700">Event Organizer</span>
+                            </label>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                            Organizers require admin approval before creating events.
+                        </p>
                     </div>
 
                     <button

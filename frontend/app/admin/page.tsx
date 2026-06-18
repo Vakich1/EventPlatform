@@ -7,7 +7,7 @@ import { AdminStats } from '@/types';
 import api from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import StatsCard from '@/components/StatsCard';
-import { Users, Calendar, Ticket, Ban, CheckCircle, Clock, XCircle, FileText, ArrowLeft, UserCog, CalendarX } from 'lucide-react';
+import { Users, Calendar, Ticket, Ban, CheckCircle, Clock, XCircle, FileText, ArrowLeft, UserCog, CalendarX, UserCheck } from 'lucide-react';
 import { goBack } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -108,6 +108,18 @@ export default function AdminPage() {
                                 <div>
                                     <h3 className="font-semibold text-lg mb-1">Manage Events</h3>
                                     <p className="text-blue-200 text-sm">View or cancel any event</p>
+                                </div>
+                            </Link>
+                            <Link
+                                href="/admin/organizers"
+                                className="flex-1 bg-blue-600 rounded-xl p-6 text-white hover:bg-blue-700 transition-colors flex items-center gap-4"
+                            >
+                                <div className="p-3 bg-blue-500 rounded-lg">
+                                    <UserCheck className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1">Organizer Approvals</h3>
+                                    <p className="text-blue-200 text-sm">Approve or reject organizer requests</p>
                                 </div>
                             </Link>
                         </div>

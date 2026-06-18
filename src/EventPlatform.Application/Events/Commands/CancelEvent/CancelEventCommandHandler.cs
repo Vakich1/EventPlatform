@@ -20,6 +20,9 @@ public class CancelEventCommandHandler : IRequestHandler<CancelEventCommand>
 
     public async Task Handle(CancelEventCommand request, CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsOrganizer && !_currentUserService.IsAdmin)
+            throw new ForbiddenException("Only organizers and admins can cancel events.");
+        
         var @event = await _context.Events.FirstOrDefaultAsync(e => e.Id == request.Id ,cancellationToken);
         
         if (@event is null)

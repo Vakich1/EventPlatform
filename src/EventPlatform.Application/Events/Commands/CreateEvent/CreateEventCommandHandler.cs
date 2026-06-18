@@ -1,5 +1,6 @@
 using EventPlatform.Application.Common.Interfaces;
 using EventPlatform.Domain.Entities;
+using EventPlatform.Domain.Exceptions;
 using MediatR;
 
 namespace EventPlatform.Application.Events.Commands.CreateEvent;
@@ -19,6 +20,9 @@ public class CreateEventCommandHandler : IRequestHandler<CreateEventCommand, Gui
 
     public async Task<Guid> Handle(CreateEventCommand request, CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsOrganizer && !_currentUserService.IsAdmin)
+            throw new ForbiddenException("Only organizers and admins can create events.");
+        
         var @event = Event.Create(
             request.Title,
             request.Description,

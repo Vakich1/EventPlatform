@@ -1,6 +1,7 @@
 using EventPlatform.Application.Common.Interfaces;
 using EventPlatform.Application.Common.Models;
 using EventPlatform.Domain.Entities;
+using EventPlatform.Domain.Enums;
 using EventPlatform.Domain.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,11 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, A
         
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         var user = User.Create(request.Email, passwordHash, request.FirstName, request.LastName);
+        
+        if (request.Role == "Organizer")
+        {
+            user.SetRole(UserRole.Organizer);
+        }
         
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();

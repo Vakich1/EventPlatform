@@ -9,7 +9,7 @@ interface AuthContextType {
     isLoading: boolean;
     role: string | null;
     login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+    register: (email: string, password: string, firstName: string, lastName: string, role?: string) => Promise<void>;
     logout: () => void;
 }
 
@@ -51,12 +51,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(decodeRole(accessToken));
     };
 
-    const register = async (email: string, password: string, firstName: string, lastName: string) => {
+    const register = async (email: string, password: string, firstName: string, lastName: string, role: string = 'User') => {
         const response = await api.post<AuthResult>('/auth/register', {
             email,
             password,
             firstName,
             lastName,
+            role,
         });
         const { accessToken, refreshToken } = response.data;
 

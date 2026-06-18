@@ -20,6 +20,9 @@ public class UpdateEventCommandHandler : IRequestHandler<UpdateEventCommand>
 
     public async Task Handle(UpdateEventCommand request, CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsOrganizer && !_currentUserService.IsAdmin)
+            throw new ForbiddenException("Only organizers and admins can update events.");
+        
         var @event = await _context.Events.FirstOrDefaultAsync(e => e.Id == request.Id,  cancellationToken);
         
         if (@event is null)

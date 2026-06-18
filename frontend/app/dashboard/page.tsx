@@ -19,9 +19,10 @@ type Tab = 'events' | 'registrations';
 
 export default function DashboardPage() {
     const router = useRouter();
-    const { isAuthenticated, isLoading: authLoading } = useAuth();
+    const { isAuthenticated, isLoading: authLoading, role } = useAuth();
 
-    const [activeTab, setActiveTab] = useState<Tab>('events');
+    const isOrganizerOrAdmin = role === 'Organizer' || role === 'Admin';
+    const [activeTab, setActiveTab] = useState<Tab>(isOrganizerOrAdmin ? 'events' : 'registrations');
 
     const [events, setEvents] = useState<PagedResult<EventSummary> | null>(null);
     const [registrations, setRegistrations] = useState<PagedResult<MyRegistration> | null>(null);
@@ -57,13 +58,19 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
+        if (!authLoading && isAuthenticated && isOrganizerOrAdmin) {
             const load = async () => {
                 await loadEvents(1);
             };
             load();
         }
-    }, [isAuthenticated, authLoading]);
+        if (!authLoading && isAuthenticated && !isOrganizerOrAdmin) {
+            const load = async () => {
+                await loadRegistrations(1);
+            };
+            load();
+        }
+    }, [isAuthenticated, authLoading, isOrganizerOrAdmin]);
 
     // При переключении на вкладку регистраций загружаем данные если ещё не загружены
     useEffect(() => {
@@ -84,7 +91,7 @@ export default function DashboardPage() {
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-6">
                     <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                    {activeTab === 'events' && (
+                    {activeTab === 'events' && isOrganizerOrAdmin && (
                         <Link
                             href="/events/create"
                             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
@@ -96,28 +103,30 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Вкладки */}
-                <div className="flex border-b border-gray-200 mb-6">
-                    <button
-                        onClick={() => setActiveTab('events')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-                            activeTab === 'events'
-                                ? 'border-blue-600 text-blue-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                    >
-                        My Events
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('registrations')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-                            activeTab === 'registrations'
-                                ? 'border-blue-600 text-blue-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                    >
-                        My Registrations
-                    </button>
-                </div>
+                {isOrganizerOrAdmin && (
+                    <div className="flex border-b border-gray-200 mb-6">
+                        <button
+                            onClick={() => setActiveTab('events')}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                                activeTab === 'events'
+                                    ? 'border-blue-600 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            My Events
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('registrations')}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                                activeTab === 'registrations'
+                                    ? 'border-blue-600 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            My Registrations
+                        </button>
+                    </div>
+                )}
 
                 {/* Контент вкладки My Events */}
                 {activeTab === 'events' && (

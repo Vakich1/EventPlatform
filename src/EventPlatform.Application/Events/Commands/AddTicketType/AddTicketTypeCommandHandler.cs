@@ -19,6 +19,9 @@ public class AddTicketTypeCommandHandler : IRequestHandler<AddTicketTypeCommand,
 
     public async Task<Guid> Handle(AddTicketTypeCommand request, CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsOrganizer && !_currentUserService.IsAdmin)
+            throw new ForbiddenException("Only organizers and admins can add ticket types.");
+        
         var @event = await _context.Events
             .FirstOrDefaultAsync(e => e.Id == request.EventId, cancellationToken);
 

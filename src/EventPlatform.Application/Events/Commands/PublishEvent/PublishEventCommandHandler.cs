@@ -20,6 +20,9 @@ public class PublishEventCommandHandler : IRequestHandler<PublishEventCommand>
 
     public async Task Handle(PublishEventCommand request, CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsOrganizer && !_currentUserService.IsAdmin)
+            throw new ForbiddenException("Only organizers and admins can publish events.");
+        
         var @event = await _context.Events
             .Include(e => e.TicketTypes)
             .FirstOrDefaultAsync(e => e.Id == request.Id, cancellationToken);

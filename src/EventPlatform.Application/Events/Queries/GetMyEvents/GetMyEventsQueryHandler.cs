@@ -1,6 +1,7 @@
 using EventPlatform.Application.Common.Interfaces;
 using EventPlatform.Application.Common.Models;
 using EventPlatform.Application.Events.Queries.GetEvents;
+using EventPlatform.Domain.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,9 @@ public class GetMyEventsQueryHandler : IRequestHandler<GetMyEventsQuery, PagedRe
     public async Task<PagedResult<EventSummaryDto>> Handle(GetMyEventsQuery request,
         CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsOrganizer && !_currentUserService.IsAdmin)
+            throw new ForbiddenException("Only organizers and admins can view their events.");
+        
         var query = _context.Events
             .Include(e => e.Organizer)
             .Include(e => e.TicketTypes)

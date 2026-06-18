@@ -1,9 +1,12 @@
 using EventPlatform.Application.Admin.Queries.GetAllUsers;
+using EventPlatform.Application.Admin.Commands.ApproveOrganizer;
 using EventPlatform.Application.Admin.Commands.BlockUser;
 using EventPlatform.Application.Admin.Commands.CancelEventByAdmin;
 using EventPlatform.Application.Admin.Commands.CancelRegistration;
+using EventPlatform.Application.Admin.Commands.RejectOrganizer;
 using EventPlatform.Application.Admin.Commands.UnblockUser;
 using EventPlatform.Application.Admin.Queries.GetAllEvents;
+using EventPlatform.Application.Admin.Queries.GetPendingOrganizers;
 using EventPlatform.Application.Admin.Queries.GetStats;
 using EventPlatform.Application.Admin.Queries.GetUserById;
 using EventPlatform.Application.Admin.Queries.GetUserEvents;
@@ -146,5 +149,41 @@ public static class AdminEndpoints
             })
             .WithName("GetAllEvents")
             .WithSummary("Get all events (Admin only)");
+        
+        group.MapGet("/organizers/pending", async (
+                ISender sender,
+                CancellationToken cancellationToken,
+                int page = 1,
+                int pageSize = 20) =>
+            {
+                var result = await sender.Send(
+                    new GetPendingOrganizersQuery(page, pageSize),
+                    cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("GetPendingOrganizers")
+            .WithSummary("Get pending organizer approvals (Admin only)");
+        
+        group.MapPost("/organizers/{userId:guid}/approve", async (
+                Guid userId,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                await sender.Send(new ApproveOrganizerCommand(userId), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithName("ApproveOrganizer")
+            .WithSummary("Approve organizer (Admin only)");
+        
+        group.MapPost("/organizers/{userId:guid}/reject", async (
+                Guid userId,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                await sender.Send(new RejectOrganizerCommand(userId), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithName("RejectOrganizer")
+            .WithSummary("Reject organizer (Admin only)");
     }
 }

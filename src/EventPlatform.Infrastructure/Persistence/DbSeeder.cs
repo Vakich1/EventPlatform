@@ -15,7 +15,8 @@ public static class DbSeeder
         adminUser.SetRole(UserRole.Admin);
 
         var testUser = User.Create("test@test.com", BCrypt.Net.BCrypt.HashPassword("Test123!"), "Test", "User");
-        testUser.SetRole(UserRole.User);
+        testUser.SetRole(UserRole.Organizer);
+        testUser.ApproveAsOrganizer();
 
         context.Users.AddRange(adminUser, testUser);
         await context.SaveChangesAsync();

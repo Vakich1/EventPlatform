@@ -84,6 +84,7 @@ export interface AdminUser {
     fullName: string;
     role: string;
     isBlocked: boolean;
+    isApprovedOrganizer: boolean;
     createdAt: string;
     eventsCount: number;
     registrationsCount: number;
@@ -95,6 +96,7 @@ export interface AdminUserDetail {
     fullName: string;
     role: string;
     isBlocked: boolean;
+    isApprovedOrganizer: boolean;
     createdAt: string;
     eventsCount: number;
     registrationsCount: number;
@@ -108,5 +110,12 @@ export interface AdminRegistration {
     ticketPrice: number;
     isFree: boolean;
     ticketStatus: string;
+    createdAt: string;
+}
+
+export interface PendingOrganizer {
+    id: string;
+    email: string;
+    fullName: string;
     createdAt: string;
 }

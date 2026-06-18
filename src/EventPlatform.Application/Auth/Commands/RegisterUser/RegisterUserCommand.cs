@@ -7,4 +7,5 @@ public record RegisterUserCommand(
     string Email,
     string Password,
     string FirstName,
-    string LastName) : IRequest<AuthResult>;
+    string LastName,
+    string Role = "User") : IRequest<AuthResult>;
