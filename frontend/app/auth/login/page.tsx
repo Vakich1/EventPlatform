@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from '@/i18n';
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -18,6 +19,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const { login } = useAuth();
     const router = useRouter();
+    const { t } = useTranslation();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     
@@ -32,7 +34,7 @@ export default function LoginPage() {
             await login(data.email, data.password);
             router.push('/');
         } catch {
-            setError('Invalid email or password.');
+            setError(t('auth.invalidCredentials'));
         } finally {
             setIsLoading(false);
         }
@@ -41,7 +43,7 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">Sign in</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('auth.login')}</h1>
 
                 {error && (
                     <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -52,7 +54,7 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Email
+                            {t('auth.email')}
                         </label>
                         <input
                             {...register('email')}
@@ -67,7 +69,7 @@ export default function LoginPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Password
+                            {t('auth.password')}
                         </label>
                         <input
                             {...register('password')}
@@ -85,14 +87,14 @@ export default function LoginPage() {
                         disabled={isLoading}
                         className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
                     >
-                        {isLoading ? 'Signing in...' : 'Sign in'}
+                        {isLoading ? t('auth.signingIn') : t('auth.signIn')}
                     </button>
                 </form>
 
                 <p className="mt-4 text-sm text-gray-600 text-center">
-                    Don&#39;t have an account?{' '}
+                    {t('auth.dontHaveAccount')}{' '}
                     <Link href="/auth/register" className="text-blue-600 hover:underline">
-                        Register
+                        {t('auth.register')}
                     </Link>
                 </p>
             </div>

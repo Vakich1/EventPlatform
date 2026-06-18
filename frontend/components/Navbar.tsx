@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Plus, Shield } from 'lucide-react';
+import { Plus, Globe } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
 export default function Navbar() {
     const { isAuthenticated, isLoading, role, logout } = useAuth();
+    const { language, setLanguage, t } = useTranslation();
     const router = useRouter();
 
     const handleLogout = () => {
@@ -30,28 +32,28 @@ export default function Navbar() {
                                         className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                                     >
                                         <Plus className="w-4 h-4" />
-                                        Create Event
+                                        {t('nav.createEvent')}
                                     </Link>
                                 )}
                                 <Link
                                     href="/dashboard"
                                     className="text-sm text-gray-600 hover:text-gray-900"
                                 >
-                                    Dashboard
+                                    {t('nav.dashboard')}
                                 </Link>
                                 {role === 'Admin' && (
                                     <Link
                                         href="/admin"
                                         className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
                                     >
-                                        Admin
+                                        {t('nav.admin')}
                                     </Link>
                                 )}
                                 <button
                                     onClick={handleLogout}
                                     className="text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
                                 >
-                                    Sign out
+                                    {t('nav.signOut')}
                                 </button>
                             </>
                         ) : (
@@ -60,16 +62,25 @@ export default function Navbar() {
                                     href="/auth/login"
                                     className="text-sm text-gray-600 hover:text-gray-900"
                                 >
-                                    Sign in
+                                    {t('nav.signIn')}
                                 </Link>
                                 <Link
                                     href="/auth/register"
                                     className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                                 >
-                                    Register
+                                    {t('nav.register')}
                                 </Link>
                             </>
                         )}
+                        <div className="flex items-center gap-1 border-l border-gray-200 pl-4">
+                            <Globe className="w-4 h-4 text-gray-500" />
+                            <button
+                                onClick={() => setLanguage(language === 'ru' ? 'en' : 'ru')}
+                                className="text-sm text-gray-600 hover:text-gray-900 cursor-pointer font-medium"
+                            >
+                                {language === 'ru' ? 'EN' : 'RU'}
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

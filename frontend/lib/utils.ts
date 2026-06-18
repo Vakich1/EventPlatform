@@ -3,15 +3,18 @@ export function formatDate(
     options?: Intl.DateTimeFormatOptions,
     showTime: boolean = false
 ) {
+    const locale = typeof window !== 'undefined' 
+        ? (localStorage.getItem('language') === 'en' ? 'en-US' : 'ru-RU')
+        : 'ru-RU';
+    
     const defaultOptions: Intl.DateTimeFormatOptions = {
-        weekday: 'short',
         month: 'short',
         day: 'numeric',
         year: 'numeric',
         ...(showTime && { hour: '2-digit', minute: '2-digit' }),
     };
 
-    return new Date(dateString).toLocaleDateString('en-US', options ?? defaultOptions);
+    return new Date(dateString).toLocaleDateString(locale, options ?? defaultOptions);
 }
 
 export function getStatusColor(status: string) {

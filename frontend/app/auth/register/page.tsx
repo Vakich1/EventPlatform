@@ -7,6 +7,7 @@ import {useState} from "react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useTranslation } from '@/i18n';
 
 const registerSchema = z.object({
     firstName: z.string().min(1, 'First name is required').max(100),
@@ -29,6 +30,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
     const { register: registerUser } = useAuth();
     const router = useRouter();
+    const { t } = useTranslation();
 
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +46,7 @@ export default function RegisterPage() {
             await registerUser(data.email, data.password, data.firstName, data.lastName, data.role);
             router.push('/');
         } catch {
-            setError('Registration failed. Email may already be in use.');
+            setError(t('auth.registrationFailed'));
         } finally {
             setIsLoading(false);
         }
@@ -53,7 +55,7 @@ export default function RegisterPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">Create account</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('auth.createAccount')}</h1>
 
                 {error && (
                     <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -66,7 +68,7 @@ export default function RegisterPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                First name
+                                {t('auth.firstName')}
                             </label>
                             <input
                                 {...register('firstName')}
@@ -80,7 +82,7 @@ export default function RegisterPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Last name
+                                {t('auth.lastName')}
                             </label>
                             <input
                                 {...register('lastName')}
@@ -95,7 +97,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Email
+                            {t('auth.email')}
                         </label>
                         <input
                             {...register('email')}
@@ -110,7 +112,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Password
+                            {t('auth.password')}
                         </label>
                         <input
                             {...register('password')}
@@ -125,7 +127,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Confirm password
+                            {t('auth.confirmPassword')}
                         </label>
                         <input
                             {...register('confirmPassword')}
@@ -140,7 +142,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Account type
+                            {t('auth.accountType')}
                         </label>
                         <div className="flex gap-4">
                             <label className="flex items-center gap-2 cursor-pointer">
@@ -150,7 +152,7 @@ export default function RegisterPage() {
                                     {...register('role')}
                                     className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                                 />
-                                <span className="text-sm text-gray-700">Regular User</span>
+                                <span className="text-sm text-gray-700">{t('auth.regularUser')}</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -159,11 +161,11 @@ export default function RegisterPage() {
                                     {...register('role')}
                                     className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                                 />
-                                <span className="text-sm text-gray-700">Event Organizer</span>
+                                <span className="text-sm text-gray-700">{t('auth.eventOrganizer')}</span>
                             </label>
                         </div>
                         <p className="mt-1 text-xs text-gray-500">
-                            Organizers require admin approval before creating events.
+                            {t('auth.organizerApproval')}
                         </p>
                     </div>
 
@@ -172,15 +174,14 @@ export default function RegisterPage() {
                         disabled={isLoading}
                         className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
                     >
-                        {/* Тернарный оператор — если isLoading показываем один текст, иначе другой */}
-                        {isLoading ? 'Creating account...' : 'Create account'}
+                        {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
                     </button>
                 </form>
 
                 <p className="mt-4 text-sm text-gray-600 text-center">
-                    Already have an account?{' '}
+                    {t('auth.alreadyHaveAccount')}{' '}
                     <Link href="/auth/login" className="text-blue-600 hover:underline">
-                        Sign in
+                        {t('auth.signIn')}
                     </Link>
                 </p>
             </div>

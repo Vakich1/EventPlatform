@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
 interface ConfirmDialogProps {
     title: string;
@@ -16,12 +17,14 @@ interface ConfirmDialogProps {
 export default function ConfirmDialog({
     title,
     message,
-    confirmLabel = 'Confirm',
+    confirmLabel,
     onConfirm,
     onClose,
     isLoading = false,
     danger = false,
 }: ConfirmDialogProps) {
+    const { t } = useTranslation();
+    
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
@@ -55,14 +58,14 @@ export default function ConfirmDialog({
                                     : 'bg-blue-600 hover:bg-blue-700'
                             }`}
                         >
-                            {isLoading ? 'Processing...' : confirmLabel}
+                            {isLoading ? t('dialog.processing') : (confirmLabel || t('dialog.confirm'))}
                         </button>
                         <button
                             onClick={onClose}
                             disabled={isLoading}
                             className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
                         >
-                            Cancel
+                            {t('cancel')}
                         </button>
                     </div>
                 </div>

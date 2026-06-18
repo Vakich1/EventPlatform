@@ -10,11 +10,13 @@ import Navbar from "@/components/Navbar";
 import { formatDate, getStatusColor, goBack } from '@/lib/utils';
 import EventDetailSkeleton from "@/components/EventDetailSkeleton";
 import PaymentModal from '@/components/PaymentModal';
+import { useTranslation } from '@/i18n';
 
 export default function EventDetailPage () {
     const { id } = useParams<{ id: string}>();
     const router = useRouter();
     const { isAuthenticated, isLoading: authLoading } = useAuth();
+    const { t } = useTranslation();
 
     const [event, setEvent] = useState<EventDetail | null>(null);
     const [userRegistration, setUserRegistration] = useState<UserRegistration | null>(null);
@@ -111,17 +113,17 @@ export default function EventDetailPage () {
                     className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back
+                    {t('back')}
                 </button>
 
                 <div className="bg-white rounded-xl shadow-sm p-8">
                     <div className="flex items-start justify-between mb-6">
                         <div>
                             <span className={`inline-block text-xs font-medium px-2 py-1 rounded-full mb-3 ${getStatusColor(event.status)}`}>
-                                {event.status}
+                                {t(`status.${event.status}`)}
                             </span>
                             <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
-                            <p className="text-gray-500 mt-1">by {event.organizerName}</p>
+                            <p className="text-gray-500 mt-1">{t('events.by')} {event.organizerName}</p>
                         </div>
                     </div>
 
@@ -129,28 +131,28 @@ export default function EventDetailPage () {
                         <div className="flex items-center gap-3">
                             <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
                             <div>
-                                <p className="text-xs text-gray-500">Start</p>
+                                <p className="text-xs text-gray-500">{t('events.start')}</p>
                                 <p className="text-sm font-medium text-gray-900">{formatDate(event.startDate, undefined, true)}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
                             <div>
-                                <p className="text-xs text-gray-500">End</p>
+                                <p className="text-xs text-gray-500">{t('events.end')}</p>
                                 <p className="text-sm font-medium text-gray-900">{formatDate(event.endDate, undefined, true)}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <MapPin className="w-5 h-5 text-blue-500 flex-shrink-0" />
                             <div>
-                                <p className="text-xs text-gray-500">Location</p>
+                                <p className="text-xs text-gray-500">{t('events.location')}</p>
                                 <p className="text-sm font-medium text-gray-900">{event.location}</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="mb-8">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-3">About this event</h2>
+                        <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('events.aboutEvent')}</h2>
                         <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
                     </div>
 
@@ -169,7 +171,7 @@ export default function EventDetailPage () {
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <Ticket className="w-5 h-5" />
-                                Tickets
+                                {t('events.tickets')}
                             </h2>
                             <div className="space-y-3">
                                 {event.ticketTypes.map((ticketType) => (
@@ -181,12 +183,12 @@ export default function EventDetailPage () {
                                             <p className="font-medium text-gray-900">{ticketType.name}</p>
                                             <div className="flex items-center gap-3 mt-1">
                                                 <p className="text-sm text-gray-500">
-                                                    {ticketType.isFree ? 'Free' : `$${ticketType.price}`}
+                                                    {ticketType.isFree ? t('free') : `$${ticketType.price}`}
                                                 </p>
                                                 <span className="text-gray-300">•</span>
                                                 <p className="text-sm text-gray-500 flex items-center gap-1">
                                                     <Users className="w-3 h-3" />
-                                                    {ticketType.availableQuantity} of {ticketType.totalQuantity} available
+                                                    {ticketType.availableQuantity} {t('events.availableOf')} {ticketType.totalQuantity} {t('events.ticketsAvailable')}
                                                 </p>
                                             </div>
                                         </div>
@@ -200,13 +202,13 @@ export default function EventDetailPage () {
                                             className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                         >
                                             {userRegistration?.ticketTypeId === ticketType.id && userRegistration?.ticketStatus === 'Active'
-                                                ? '✓ Registered'
+                                                ? t('events.registered')
                                                 : registeringTicketId === ticketType.id
-                                                    ? 'Processing...'
+                                                    ? t('events.processing')
                                                     : ticketType.availableQuantity === 0
-                                                        ? 'Sold out'
+                                                        ? t('events.soldOut')
                                                         : ticketType.isFree
-                                                            ? 'Register'
+                                                            ? t('events.register')
                                                             : `Buy - $${ticketType.price}`}
                                         </button>
                                     </div>
@@ -224,7 +226,7 @@ export default function EventDetailPage () {
                     ticketTypeId={paymentModal.ticketTypeId}
                     onSuccess={async () => {
                         setPaymentModal(null);
-                        setSuccessMessage('Payment successful! Check your email for the ticket.');
+                        setSuccessMessage(t('payment.paymentSuccess'));
 
                         await new Promise(resolve => setTimeout(resolve, 2000));
 

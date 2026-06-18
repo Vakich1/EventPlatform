@@ -8,6 +8,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import api from "@/lib/api";
 import Navbar from "@/components/Navbar";
 import { goBack } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 
 const createEventSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200),
@@ -24,6 +25,7 @@ type CreateEventForm = z.infer<typeof createEventSchema>;
 
 export default function CreateEventPage() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -61,7 +63,7 @@ export default function CreateEventPage() {
             <Navbar />
 
             <div className="max-w-2xl mx-auto px-4 py-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Event</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('events.create')}</h1>
 
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -73,12 +75,12 @@ export default function CreateEventPage() {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Title
+                                {t('events.title')}
                             </label>
                             <input
                                 {...register('title')}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="My Awesome Event"
+                                placeholder={t('events.titlePlaceholder')}
                             />
                             {errors.title && (
                                 <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>
@@ -87,13 +89,13 @@ export default function CreateEventPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Description
+                                {t('events.description')}
                             </label>
                             <textarea
                                 {...register('description')}
                                 rows={5}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                placeholder="Tell people about your event..."
+                                placeholder={t('events.descriptionPlaceholder')}
                             />
                             {errors.description && (
                                 <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>
@@ -102,12 +104,12 @@ export default function CreateEventPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Location
+                                {t('events.location')}
                             </label>
                             <input
                                 {...register('location')}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="City, Venue or Online"
+                                placeholder={t('events.locationPlaceholder')}
                             />
                             {errors.location && (
                                 <p className="mt-1 text-xs text-red-500">{errors.location.message}</p>
@@ -117,7 +119,7 @@ export default function CreateEventPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Start date
+                                    {t('events.startDate')}
                                 </label>
                                 <input
                                     {...register('startDate')}
@@ -132,7 +134,7 @@ export default function CreateEventPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    End date
+                                    {t('events.endDate')}
                                 </label>
                                 <input
                                     {...register('endDate')}
@@ -152,14 +154,14 @@ export default function CreateEventPage() {
                                 disabled={isLoading}
                                 className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
                             >
-                                {isLoading ? 'Creating...' : 'Create Event'}
+                                {isLoading ? t('events.creating') : t('events.create')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => goBack('/dashboard')}
                                 className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
                             >
-                                Cancel
+                                {t('cancel')}
                             </button>
                         </div>
                     </form>

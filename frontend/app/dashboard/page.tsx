@@ -13,13 +13,14 @@ import RegistrationCard from '@/components/RegistrationCard';
 import RegistrationCardSkeleton from '@/components/RegistrationCardSkeleton';
 import Pagination from '@/components/Pagination';
 import { Plus } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
-// Тип активной вкладки
 type Tab = 'events' | 'registrations';
 
 export default function DashboardPage() {
     const router = useRouter();
     const { isAuthenticated, isLoading: authLoading, role } = useAuth();
+    const { t } = useTranslation();
 
     const isOrganizerOrAdmin = role === 'Organizer' || role === 'Admin';
     const [activeTab, setActiveTab] = useState<Tab>(isOrganizerOrAdmin ? 'events' : 'registrations');
@@ -59,26 +60,16 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (!authLoading && isAuthenticated && isOrganizerOrAdmin) {
-            const load = async () => {
-                await loadEvents(1);
-            };
-            load();
+            loadEvents(1);
         }
         if (!authLoading && isAuthenticated && !isOrganizerOrAdmin) {
-            const load = async () => {
-                await loadRegistrations(1);
-            };
-            load();
+            loadRegistrations(1);
         }
     }, [isAuthenticated, authLoading, isOrganizerOrAdmin]);
 
-    // При переключении на вкладку регистраций загружаем данные если ещё не загружены
     useEffect(() => {
         if (activeTab === 'registrations' && !registrations) {
-            const load = async () => {
-                await loadRegistrations(1);
-            };
-            load();
+            loadRegistrations(1);
         }
     }, [activeTab]);
 
@@ -90,19 +81,18 @@ export default function DashboardPage() {
 
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
                     {activeTab === 'events' && isOrganizerOrAdmin && (
                         <Link
                             href="/events/create"
                             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                         >
                             <Plus className="w-4 h-4" />
-                            Create Event
+                            {t('dashboard.createEvent')}
                         </Link>
                     )}
                 </div>
 
-                {/* Вкладки */}
                 {isOrganizerOrAdmin && (
                     <div className="flex border-b border-gray-200 mb-6">
                         <button
@@ -113,7 +103,7 @@ export default function DashboardPage() {
                                     : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                         >
-                            My Events
+                            {t('dashboard.myEvents')}
                         </button>
                         <button
                             onClick={() => setActiveTab('registrations')}
@@ -123,12 +113,11 @@ export default function DashboardPage() {
                                     : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                         >
-                            My Registrations
+                            {t('dashboard.myRegistrations')}
                         </button>
                     </div>
                 )}
 
-                {/* Контент вкладки My Events */}
                 {activeTab === 'events' && (
                     <>
                         {isLoadingEvents ? (
@@ -139,13 +128,13 @@ export default function DashboardPage() {
                             </div>
                         ) : events?.items.length === 0 ? (
                             <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-                                <p className="text-gray-500 mb-4">You haven&#39;t created any events yet.</p>
+                                <p className="text-gray-500 mb-4">{t('events.noEvents')}</p>
                                 <Link
                                     href="/events/create"
                                     className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
                                 >
                                     <Plus className="w-4 h-4" />
-                                    Create your first event
+                                    {t('events.createFirst')}
                                 </Link>
                             </div>
                         ) : (
@@ -169,7 +158,6 @@ export default function DashboardPage() {
                     </>
                 )}
 
-                {/* Контент вкладки My Registrations */}
                 {activeTab === 'registrations' && (
                     <>
                         {isLoadingRegistrations ? (
@@ -180,12 +168,12 @@ export default function DashboardPage() {
                             </div>
                         ) : registrations?.items.length === 0 ? (
                             <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-                                <p className="text-gray-500 mb-4">You haven&#39;t registered for any events yet.</p>
+                                <p className="text-gray-500 mb-4">{t('events.noRegistrations')}</p>
                                 <Link
                                     href="/"
                                     className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
                                 >
-                                    Browse Events
+                                    {t('events.browseEvents')}
                                 </Link>
                             </div>
                         ) : (

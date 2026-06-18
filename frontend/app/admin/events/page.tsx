@@ -12,12 +12,14 @@ import { formatDate, getStatusColor } from '@/lib/utils';
 import { Search, XCircle, Calendar, MapPin, Ticket, ArrowLeft } from 'lucide-react';
 import { goBack } from '@/lib/utils';
 import Link from 'next/link';
+import { useTranslation } from '@/i18n';
 
 const STATUS_OPTIONS = ['All', 'Draft', 'Published', 'Completed', 'Cancelled'];
 
 export default function AdminEventsPage() {
     const router = useRouter();
     const { isAuthenticated, isLoading: authLoading, role } = useAuth();
+    const { t } = useTranslation();
     const [events, setEvents] = useState<PagedResult<EventSummary> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
@@ -30,7 +32,7 @@ export default function AdminEventsPage() {
     useEffect(() => {
         if (!authLoading && !isAuthenticated) router.push('/auth/login');
         if (!authLoading && isAuthenticated && role !== 'Admin') {
-            setError('You do not have admin access.');
+            setError(t('errors.unauthorized'));
             setIsLoading(false);
         }
     }, [authLoading, isAuthenticated, role, router]);
@@ -103,10 +105,10 @@ export default function AdminEventsPage() {
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back
+                    {t('back')}
                 </button>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">Manage Events</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('admin.manageEvents')}</h1>
 
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -130,7 +132,7 @@ export default function AdminEventsPage() {
                         className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
                     >
                         <Search className="w-4 h-4" />
-                        Search
+                        {t('search')}
                     </button>
                 </div>
 
@@ -145,7 +147,7 @@ export default function AdminEventsPage() {
                                     : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                             }`}
                         >
-                            {status}
+                            {status === 'All' ? 'All' : t(`status.${status}`)}
                         </button>
                     ))}
                 </div>
@@ -161,7 +163,7 @@ export default function AdminEventsPage() {
                     </div>
                 ) : events?.items.length === 0 ? (
                     <div className="text-center py-16 bg-white rounded-xl shadow-sm text-gray-500">
-                        No events found.
+                        {t('admin.noEvents')}
                     </div>
                 ) : (
                     <>
@@ -171,7 +173,7 @@ export default function AdminEventsPage() {
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
                                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(event.status)}`}>
-                                                {event.status}
+                                                {t(`status.${event.status}`)}
                                             </span>
                                             <h3 className="font-semibold text-gray-900">{event.title}</h3>
                                         </div>
@@ -186,9 +188,9 @@ export default function AdminEventsPage() {
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <Ticket className="w-3 h-3" />
-                                                {event.availableTickets} tickets
+                                                {event.availableTickets} {t('events.ticketsAvailable')}
                                             </span>
-                                            <span className="text-gray-400">by {event.organizerName}</span>
+                                            <span className="text-gray-400">{t('events.by')} {event.organizerName}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 ml-4">
@@ -196,7 +198,7 @@ export default function AdminEventsPage() {
                                             href={`/events/${event.id}`}
                                             className="text-sm text-blue-600 hover:underline"
                                         >
-                                            View
+                                            {t('events.view')}
                                         </Link>
                                         {event.status !== 'Cancelled' && event.status !== 'Completed' && (
                                             <button
@@ -204,7 +206,7 @@ export default function AdminEventsPage() {
                                                 className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 border border-red-200 px-3 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
                                             >
                                                 <XCircle className="w-3 h-3" />
-                                                Cancel
+                                                {t('events.cancel')}
                                             </button>
                                         )}
                                     </div>
@@ -227,9 +229,9 @@ export default function AdminEventsPage() {
 
             {cancelEvent && (
                 <ConfirmDialog
-                    title="Cancel Event"
-                    message={`Are you sure you want to cancel "${cancelEvent.title}"? This will cancel all active tickets.`}
-                    confirmLabel="Cancel Event"
+                    title={t('userDetail.cancelEvent')}
+                    message={t('userDetail.cancelEventConfirm').replace('{{event}}', cancelEvent.title)}
+                    confirmLabel={t('userDetail.cancelEvent')}
                     danger
                     onConfirm={handleCancelEvent}
                     onClose={() => setCancelEvent(null)}

@@ -12,10 +12,12 @@ import { formatDate } from '@/lib/utils';
 import { Search, Ban, CheckCircle, ArrowLeft, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { goBack } from '@/lib/utils';
+import { useTranslation } from '@/i18n';
 
 export default function AdminUsersPage() {
     const router = useRouter();
     const { isAuthenticated, isLoading: authLoading, role } = useAuth();
+    const { t } = useTranslation();
     const [users, setUsers] = useState<PagedResult<AdminUser> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function AdminUsersPage() {
     useEffect(() => {
         if (!authLoading && !isAuthenticated) router.push('/auth/login');
         if (!authLoading && isAuthenticated && role !== 'Admin') {
-            setError('You do not have admin access.');
+            setError(t('errors.unauthorized'));
             setIsLoading(false);
         }
     }, [authLoading, isAuthenticated, role, router]);
@@ -100,10 +102,10 @@ export default function AdminUsersPage() {
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back
+                    {t('back')}
                 </button>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">Manage Users</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('admin.manageUsers')}</h1>
 
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -118,7 +120,7 @@ export default function AdminUsersPage() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            placeholder="Search by email or name..."
+                            placeholder={t('admin.searchPlaceholder')}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -127,7 +129,7 @@ export default function AdminUsersPage() {
                         className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
                     >
                         <Search className="w-4 h-4" />
-                        Search
+                        {t('search')}
                     </button>
                 </div>
 
@@ -142,7 +144,7 @@ export default function AdminUsersPage() {
                     </div>
                 ) : users?.items.length === 0 ? (
                     <div className="text-center py-16 bg-white rounded-xl shadow-sm text-gray-500">
-                        No users found.
+                        {t('admin.noUsers')}
                     </div>
                 ) : (
                     <>
@@ -179,7 +181,7 @@ export default function AdminUsersPage() {
                                                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                                                     user.isBlocked ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                                                 }`}>
-                                                    {user.isBlocked ? 'Blocked' : 'Active'}
+                                                    {user.isBlocked ? t('status.Blocked') : t('userDetail.active')}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -189,7 +191,7 @@ export default function AdminUsersPage() {
                                                         className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
                                                     >
                                                         <Eye className="w-4 h-4" />
-                                                        View
+                                                        {t('events.view')}
                                                     </Link>
                                                     {user.role !== 'Admin' && (
                                                         user.isBlocked ? (

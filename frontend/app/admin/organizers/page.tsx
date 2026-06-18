@@ -10,10 +10,12 @@ import Pagination from '@/components/Pagination';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { formatDate } from '@/lib/utils';
 import { ArrowLeft, CheckCircle, XCircle, UserCheck } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
 export default function AdminOrganizersPage() {
     const router = useRouter();
     const { isAuthenticated, isLoading: authLoading, role } = useAuth();
+    const { t } = useTranslation();
     const [organizers, setOrganizers] = useState<PagedResult<PendingOrganizer> | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export default function AdminOrganizersPage() {
     useEffect(() => {
         if (!authLoading && !isAuthenticated) router.push('/auth/login');
         if (!authLoading && isAuthenticated && role !== 'Admin') {
-            setError('You do not have admin access.');
+            setError(t('errors.unauthorized'));
             setIsLoading(false);
         }
     }, [authLoading, isAuthenticated, role, router]);
@@ -90,11 +92,12 @@ export default function AdminOrganizersPage() {
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back
+                    {t('back')}
                 </button>
 
                 <div className="flex items-center gap-3 mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Pending Organizer Approvals</h1>
+                    <UserCheck className="w-6 h-6 text-blue-600" />
+                    <h1 className="text-2xl font-bold text-gray-900">{t('admin.pendingOrganizerApprovals')}</h1>
                 </div>
 
                 {error && (
@@ -115,7 +118,7 @@ export default function AdminOrganizersPage() {
                 ) : organizers?.items.length === 0 ? (
                     <div className="text-center py-16 bg-white rounded-xl shadow-sm">
                         <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">No pending organizer approvals.</p>
+                        <p className="text-gray-500">{t('admin.noPendingOrganizers')}</p>
                     </div>
                 ) : (
                     <>
@@ -144,14 +147,14 @@ export default function AdminOrganizersPage() {
                                                         className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 cursor-pointer"
                                                     >
                                                         <CheckCircle className="w-4 h-4" />
-                                                        Approve
+                                                        {t('admin.approve')}
                                                     </button>
                                                     <button
                                                         onClick={() => setConfirmAction({ type: 'reject', userId: org.id, userName: org.fullName })}
                                                         className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 cursor-pointer"
                                                     >
                                                         <XCircle className="w-4 h-4" />
-                                                        Reject
+                                                        {t('admin.reject')}
                                                     </button>
                                                 </div>
                                             </td>
@@ -176,13 +179,12 @@ export default function AdminOrganizersPage() {
 
             {confirmAction && (
                 <ConfirmDialog
-                    title={confirmAction.type === 'approve' ? 'Approve Organizer' : 'Reject Organizer'}
-                    message={
-                        confirmAction.type === 'approve'
-                            ? `Approve "${confirmAction.userName}" as an organizer? They will be able to create events.`
-                            : `Reject "${confirmAction.userName}" organizer request? They will be set back to a regular user.`
+                    title={confirmAction.type === 'approve' ? t('admin.approveOrganizer') : t('admin.rejectOrganizer')}
+                    message={confirmAction.type === 'approve'
+                        ? t('admin.approveConfirm').replace('{{name}}', confirmAction.userName)
+                        : t('admin.rejectConfirm').replace('{{name}}', confirmAction.userName)
                     }
-                    confirmLabel={confirmAction.type === 'approve' ? 'Approve' : 'Reject'}
+                    confirmLabel={confirmAction.type === 'approve' ? t('admin.approve') : t('admin.reject')}
                     danger={confirmAction.type === 'reject'}
                     onConfirm={handleAction}
                     onClose={() => setConfirmAction(null)}

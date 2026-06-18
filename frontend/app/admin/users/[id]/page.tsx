@@ -11,6 +11,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import { formatDate, getStatusColor, goBack } from '@/lib/utils';
 import { ArrowLeft, Calendar, MapPin, Ticket, XCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from '@/i18n';
 
 type Tab = 'events' | 'registrations';
 
@@ -19,6 +20,7 @@ export default function AdminUserDetailPage() {
     const params = useParams();
     const userId = params.id as string;
     const { isAuthenticated, isLoading: authLoading, role } = useAuth();
+    const { t } = useTranslation();
 
     const [user, setUser] = useState<AdminUserDetail | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('events');
@@ -39,7 +41,7 @@ export default function AdminUserDetailPage() {
     useEffect(() => {
         if (!authLoading && !isAuthenticated) router.push('/auth/login');
         if (!authLoading && isAuthenticated && role !== 'Admin') {
-            setError('You do not have admin access.');
+            setError(t('errors.unauthorized'));
             setIsLoading(false);
         }
     }, [authLoading, isAuthenticated, role, router]);
@@ -141,7 +143,7 @@ export default function AdminUserDetailPage() {
                     className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back
+                    {t('back')}
                 </button>
 
                 {error && (
@@ -177,14 +179,14 @@ export default function AdminUserDetailPage() {
                                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                                         user.isBlocked ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                                     }`}>
-                                        {user.isBlocked ? 'Blocked' : 'Active'}
+                                        {user.isBlocked ? t('userDetail.blocked') : t('userDetail.active')}
                                     </span>
                                 </div>
                             </div>
                             <div className="flex gap-6 text-sm text-gray-500">
-                                <span>Joined {formatDate(user.createdAt, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                                <span>{user.eventsCount} events</span>
-                                <span>{user.registrationsCount} registrations</span>
+                                <span>{t('userDetail.joined')} {formatDate(user.createdAt, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                <span>{user.eventsCount} {t('userDetail.eventsCount')}</span>
+                                <span>{user.registrationsCount} {t('userDetail.registrationsCount')}</span>
                             </div>
                         </div>
 
@@ -197,7 +199,7 @@ export default function AdminUserDetailPage() {
                                         : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                             >
-                                Events ({user.eventsCount})
+                                {t('userDetail.events')} ({user.eventsCount})
                             </button>
                             <button
                                 onClick={() => setActiveTab('registrations')}
@@ -207,7 +209,7 @@ export default function AdminUserDetailPage() {
                                         : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                             >
-                                Registrations ({user.registrationsCount})
+                                {t('userDetail.registrations')} ({user.registrationsCount})
                             </button>
                         </div>
 
@@ -215,7 +217,7 @@ export default function AdminUserDetailPage() {
                             <>
                                 {events?.items.length === 0 ? (
                                     <div className="text-center py-16 bg-white rounded-xl shadow-sm text-gray-500">
-                                        No events found.
+                                        {t('userDetail.noEvents')}
                                     </div>
                                 ) : (
                                     <>
@@ -225,7 +227,7 @@ export default function AdminUserDetailPage() {
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3 mb-2">
                                                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(event.status)}`}>
-                                                                {event.status}
+                                                                {t(`status.${event.status}`)}
                                                             </span>
                                                             <h3 className="font-semibold text-gray-900">{event.title}</h3>
                                                         </div>
@@ -240,7 +242,7 @@ export default function AdminUserDetailPage() {
                                                             </span>
                                                             <span className="flex items-center gap-1">
                                                                 <Ticket className="w-3 h-3" />
-                                                                {event.availableTickets} tickets
+                                                                {event.availableTickets} {t('events.ticketsAvailable')}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -249,7 +251,7 @@ export default function AdminUserDetailPage() {
                                                             href={`/events/${event.id}`}
                                                             className="text-sm text-blue-600 hover:underline"
                                                         >
-                                                            View
+                                                            {t('events.view')}
                                                         </Link>
                                                         {event.status !== 'Cancelled' && event.status !== 'Completed' && (
                                                             <button
@@ -257,7 +259,7 @@ export default function AdminUserDetailPage() {
                                                                 className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 border border-red-200 px-3 py-1 rounded-lg hover:bg-red-50 cursor-pointer ml-2"
                                                             >
                                                                 <XCircle className="w-3 h-3" />
-                                                                Cancel
+                                                                {t('events.cancel')}
                                                             </button>
                                                         )}
                                                     </div>
@@ -282,7 +284,7 @@ export default function AdminUserDetailPage() {
                             <>
                                 {registrations?.items.length === 0 ? (
                                     <div className="text-center py-16 bg-white rounded-xl shadow-sm text-gray-500">
-                                        No registrations found.
+                                        {t('userDetail.noRegistrations')}
                                     </div>
                                 ) : (
                                     <>
@@ -312,7 +314,7 @@ export default function AdminUserDetailPage() {
                                                                         : reg.ticketStatus === 'Used' ? 'bg-blue-100 text-blue-700'
                                                                             : 'bg-red-100 text-red-700'
                                                                 }`}>
-                                                                    {reg.ticketStatus}
+                                                                    {t(`status.${reg.ticketStatus}`)}
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 text-sm text-gray-500">
@@ -328,7 +330,7 @@ export default function AdminUserDetailPage() {
                                                                         className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 cursor-pointer ml-auto"
                                                                     >
                                                                         <XCircle className="w-4 h-4" />
-                                                                        Cancel
+                                                                        {t('events.cancel')}
                                                                     </button>
                                                                 )}
                                                             </td>
@@ -356,9 +358,9 @@ export default function AdminUserDetailPage() {
 
             {cancelRegistration && (
                 <ConfirmDialog
-                    title="Cancel Registration"
-                    message={`Are you sure you want to cancel the registration for "${cancelRegistration.eventTitle}"? The ticket will be cancelled and the sold count will decrease.`}
-                    confirmLabel="Cancel Registration"
+                    title={t('userDetail.cancelRegistration')}
+                    message={t('userDetail.cancelRegistrationConfirm').replace('{{event}}', cancelRegistration.eventTitle)}
+                    confirmLabel={t('userDetail.cancelRegistration')}
                     danger
                     onConfirm={handleCancelRegistration}
                     onClose={() => setCancelRegistration(null)}
@@ -368,9 +370,9 @@ export default function AdminUserDetailPage() {
 
             {cancelEvent && (
                 <ConfirmDialog
-                    title="Cancel Event"
-                    message={`Are you sure you want to cancel "${cancelEvent.title}"? This will cancel all active tickets.`}
-                    confirmLabel="Cancel Event"
+                    title={t('userDetail.cancelEvent')}
+                    message={t('userDetail.cancelEventConfirm').replace('{{event}}', cancelEvent.title)}
+                    confirmLabel={t('userDetail.cancelEvent')}
                     danger
                     onConfirm={handleCancelEvent}
                     onClose={() => setCancelEvent(null)}

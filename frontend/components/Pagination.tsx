@@ -1,3 +1,5 @@
+import { useTranslation } from '@/i18n';
+
 interface PaginationProps {
     page: number;
     totalPages: number;
@@ -7,6 +9,8 @@ interface PaginationProps {
 }
 
 export default function Pagination({ page, totalPages, hasNextPage, hasPreviousPage, onPageChange }: PaginationProps) {
+    const { t } = useTranslation();
+    
     if (totalPages <= 1) return null;
 
     return (
@@ -16,17 +20,17 @@ export default function Pagination({ page, totalPages, hasNextPage, hasPreviousP
                 disabled={!hasPreviousPage}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 cursor-pointer"
             >
-                Previous
+                {t('pagination.previous')}
             </button>
             <span className="px-4 py-2 text-sm text-gray-600">
-                Page {page} of {totalPages}
+                {t('pagination.page').replace('{{page}}', String(page)).replace('{{total}}', String(totalPages))}
             </span>
             <button
                 onClick={() => onPageChange(page + 1)}
                 disabled={!hasNextPage}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 cursor-pointer"
             >
-                Next
+                {t('pagination.next')}
             </button>
         </div>
     );

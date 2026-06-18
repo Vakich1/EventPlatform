@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { I18nProvider } from '@/i18n';
 
 export const metadata: Metadata = {
     title: 'Event Platform',
@@ -15,9 +16,11 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className="antialiased">
-                <AuthProvider>
-                    {children}
-                </AuthProvider>
+                <I18nProvider>
+                    <AuthProvider>
+                        {children}
+                    </AuthProvider>
+                </I18nProvider>
             </body>
         </html>
     );
