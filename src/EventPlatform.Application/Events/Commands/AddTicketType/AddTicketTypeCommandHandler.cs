@@ -1,5 +1,6 @@
 using EventPlatform.Application.Common.Interfaces;
 using EventPlatform.Domain.Entities;
+using EventPlatform.Domain.Enums;
 using EventPlatform.Domain.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +20,17 @@ public class AddTicketTypeCommandHandler : IRequestHandler<AddTicketTypeCommand,
 
     public async Task<Guid> Handle(AddTicketTypeCommand request, CancellationToken cancellationToken)
     {
-        if (!_currentUserService.IsOrganizer && !_currentUserService.IsAdmin)
-            throw new ForbiddenException("Only organizers and admins can add ticket types.");
+        if (!_currentUserService.IsAdmin)
+        {
+            if (!_currentUserService.IsOrganizer)
+                throw new ForbiddenException("Only organizers and admins can add ticket types.");
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == _currentUserService.UserId, cancellationToken);
+            
+            if (user is null || !user.IsApprovedOrganizer)
+                throw new ForbiddenException("Your organizer account has not been approved yet.");
+        }
         
         var @event = await _context.Events
             .FirstOrDefaultAsync(e => e.Id == request.EventId, cancellationToken);
