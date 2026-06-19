@@ -21,10 +21,11 @@ public static class EventEndpoints
                 ISender sender,
                 CancellationToken cancellationToken,
                 string? searchTerm = null,
+                string? status = null,
                 int page = 1,
                 int pageSize = 10) =>
             {
-                var result = await sender.Send(new GetEventsQuery(searchTerm, page, pageSize), cancellationToken);
+                var result = await sender.Send(new GetEventsQuery(searchTerm, status, page, pageSize), cancellationToken);
                 return Results.Ok(result);
             })
             .WithName("GetEvents")

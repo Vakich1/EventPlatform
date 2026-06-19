@@ -18,7 +18,7 @@ public class GetEventsQueryHandler : IRequestHandler<GetEventsQuery, PagedResult
 
     public async Task<PagedResult<EventSummaryDto>> Handle(GetEventsQuery request, CancellationToken cancellationToken)
     {
-        var cacheKey = $"events:list:{request.SearchTerm ?? "all"}:page:{request.Page}:size:{request.PageSize}";
+        var cacheKey = $"events:list:{request.SearchTerm ?? "all"}:{request.Status ?? "all"}:page:{request.Page}:size:{request.PageSize}";
         
         var cached = await _cache.GetAsync<PagedResult<EventSummaryDto>>(cacheKey,  cancellationToken);
         if (cached is not null)
@@ -28,6 +28,11 @@ public class GetEventsQueryHandler : IRequestHandler<GetEventsQuery, PagedResult
             .Include(e => e.Organizer)
             .Include(e => e.TicketTypes)
             .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.Status) && Enum.TryParse<Domain.Enums.EventStatus>(request.Status, true, out var status))
+        {
+            query = query.Where(e => e.Status == status);
+        }
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
