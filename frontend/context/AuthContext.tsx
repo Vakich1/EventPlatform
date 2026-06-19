@@ -8,6 +8,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     role: string | null;
+    isApprovedOrganizer: boolean;
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string, firstName: string, lastName: string, role?: string) => Promise<void>;
     logout: () => void;
@@ -25,17 +26,29 @@ function decodeRole(token: string): string | null {
     }
 }
 
+function decodeIsApprovedOrganizer(token: string): boolean {
+    try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        return decoded.isApprovedOrganizer === 'True';
+    } catch {
+        return false;
+    }
+}
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [role, setRole] = useState<string | null>(null);
+    const [isApprovedOrganizer, setIsApprovedOrganizer] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         setIsAuthenticated(!!token);
         setRole(token ? decodeRole(token) : null);
+        setIsApprovedOrganizer(token ? decodeIsApprovedOrganizer(token) : false);
         setIsLoading(false);
     }, []);
 
@@ -49,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setIsAuthenticated(true);
         setRole(decodeRole(accessToken));
+        setIsApprovedOrganizer(decodeIsApprovedOrganizer(accessToken));
     };
 
     const register = async (email: string, password: string, firstName: string, lastName: string, role: string = 'User') => {
@@ -67,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setIsAuthenticated(true);
         setRole(decodeRole(accessToken));
+        setIsApprovedOrganizer(decodeIsApprovedOrganizer(accessToken));
     };
 
     const logout = useCallback(() => {
@@ -75,10 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         document.cookie = 'accessToken=; path=/; max-age=0';
         setIsAuthenticated(false);
         setRole(null);
+        setIsApprovedOrganizer(false);
     }, []);
     
     return (
-        <AuthContext.Provider value={ {isAuthenticated, isLoading, role, login, register, logout }}>
+        <AuthContext.Provider value={ {isAuthenticated, isLoading, role, isApprovedOrganizer, login, register, logout }}>
             {children}
         </AuthContext.Provider>
     )

@@ -35,6 +35,7 @@ public class JwtService : IJwtService
             new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
             new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
             new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim("isApprovedOrganizer", user.IsApprovedOrganizer.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

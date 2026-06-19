@@ -19,10 +19,10 @@ type Tab = 'events' | 'registrations';
 
 export default function DashboardPage() {
     const router = useRouter();
-    const { isAuthenticated, isLoading: authLoading, role } = useAuth();
+    const { isAuthenticated, isLoading: authLoading, role, isApprovedOrganizer } = useAuth();
     const { t } = useTranslation();
 
-    const isOrganizerOrAdmin = role === 'Organizer' || role === 'Admin';
+    const isOrganizerOrAdmin = role === 'Admin' || (role === 'Organizer' && isApprovedOrganizer);
     const [activeTab, setActiveTab] = useState<Tab>(isOrganizerOrAdmin ? 'events' : 'registrations');
 
     const [events, setEvents] = useState<PagedResult<EventSummary> | null>(null);

@@ -7,7 +7,7 @@ import { Plus, Globe } from 'lucide-react';
 import { useTranslation } from '@/i18n';
 
 export default function Navbar() {
-    const { isAuthenticated, isLoading, role, logout } = useAuth();
+    const { isAuthenticated, isLoading, role, isApprovedOrganizer, logout } = useAuth();
     const { language, setLanguage, t } = useTranslation();
     const router = useRouter();
 
@@ -15,6 +15,8 @@ export default function Navbar() {
         logout();
         router.push('/');
     };
+
+    const canCreateEvent = role === 'Admin' || (role === 'Organizer' && isApprovedOrganizer);
 
     return (
         <nav className="bg-white border-b border-gray-200">
@@ -26,7 +28,7 @@ export default function Navbar() {
                     <div className="flex items-center gap-4">
                         {isAuthenticated ? (
                             <>
-                                {(role === 'Organizer' || role === 'Admin') && (
+                                {canCreateEvent && (
                                     <Link
                                         href="/events/create"
                                         className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
