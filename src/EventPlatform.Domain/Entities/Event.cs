@@ -41,6 +41,7 @@ public class Event : BaseEntity
             Location = location.Trim(),
             StartDate = startDate,
             EndDate = endDate,
+            Status = EventStatus.UnderReview,
             OrganizerId = organizerId
         };
     }
@@ -50,6 +51,9 @@ public class Event : BaseEntity
         if (Status == EventStatus.Cancelled)
             throw new DomainException("Cannot update a cancelled event.");
         
+        if (Status == EventStatus.Published)
+            throw new DomainException("Cannot update a published event.");
+        
         if (startDate >= endDate)
             throw new DomainException("Start date must be before end date.");
         
@@ -58,6 +62,34 @@ public class Event : BaseEntity
         Location = location.Trim();
         StartDate = startDate;
         EndDate = endDate;
+        Status = EventStatus.UnderReview;
+        SetUpdatedAt();
+    }
+
+    public void Approve()
+    {
+        if (Status != EventStatus.UnderReview)
+            throw new DomainException("Only events under review can be approved.");
+        
+        Status = EventStatus.Draft;
+        SetUpdatedAt();
+    }
+
+    public void Reject()
+    {
+        if (Status != EventStatus.UnderReview)
+            throw new DomainException("Only events under review can be rejected.");
+        
+        Status = EventStatus.Rejected;
+        SetUpdatedAt();
+    }
+
+    public void SubmitForReview()
+    {
+        if (Status != EventStatus.Rejected && Status != EventStatus.Draft)
+            throw new DomainException("Only rejected or draft events can be submitted for review.");
+        
+        Status = EventStatus.UnderReview;
         SetUpdatedAt();
     }
 
@@ -94,4 +126,7 @@ public class Event : BaseEntity
     public void AddTicketType(TicketType  ticketType) => _ticketTypes.Add(ticketType);
     
     public bool IsPublished => Status == EventStatus.Published;
+    public bool IsUnderReview => Status == EventStatus.UnderReview;
+    public bool IsRejected => Status == EventStatus.Rejected;
+    public bool CanEdit => Status != EventStatus.Published && Status != EventStatus.Completed;
 }
