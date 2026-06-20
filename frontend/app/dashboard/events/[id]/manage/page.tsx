@@ -11,6 +11,7 @@ import { EventDetail } from '@/types';
 import { getStatusColor, formatDate, goBack } from '@/lib/utils';
 import { ArrowLeft, Plus, Ticket } from 'lucide-react';
 import EventDetailSkeleton from '@/components/EventDetailSkeleton';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { useTranslation } from '@/i18n';
 
 const updateEventSchema = z.object({
@@ -91,8 +92,17 @@ export default function ManageEventPage() {
 
     const isDraft = event?.status === 'Draft';
     const isCancelled = event?.status === 'Cancelled';
+    const isPublished = event?.status === 'Published';
+    const isUnderReview = event?.status === 'UnderReview';
+    const isRejected = event?.status === 'Rejected';
+    const canEdit = !isPublished && !isCancelled;
+    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
     const onUpdateEvent = async (data: UpdateEventForm) => {
+        if (isDraft || isRejected) {
+            setShowSubmitConfirm(true);
+            return;
+        }
         setIsSubmitting(true);
         setError(null);
         try {
@@ -101,15 +111,43 @@ export default function ManageEventPage() {
                 startDate: new Date(data.startDate).toISOString(),
                 endDate: new Date(data.endDate).toISOString(),
             });
-            setSuccessMessage('Event updated successfully!');
+            setSuccessMessage(t('manage.savedSuccessfully') || 'Event updated successfully!');
             const response = await api.get(`/events/${id}`);
             setEvent(response.data);
         } catch (err: unknown) {
             if (err && typeof err === 'object' && 'response' in err) {
                 const axiosErr = err as { response?: { data?: { error?: string } } };
-                setError(axiosErr.response?.data?.error || 'Failed to update event.');
+                setError(axiosErr.response?.data?.error || t('manage.failedToUpdate') || 'Failed to update event.');
             } else {
-                setError('Failed to update event.');
+                setError(t('manage.failedToUpdate') || 'Failed to update event.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleConfirmSubmit = async () => {
+        setShowSubmitConfirm(false);
+        setIsSubmitting(true);
+        setError(null);
+        try {
+            const formData = new FormData(document.querySelector('form') as HTMLFormElement);
+            await api.put(`/events/${id}`, {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                location: formData.get('location'),
+                startDate: new Date(formData.get('startDate') as string).toISOString(),
+                endDate: new Date(formData.get('endDate') as string).toISOString(),
+            });
+            setSuccessMessage(t('manage.submittedForReview') || 'Event submitted for review!');
+            const response = await api.get(`/events/${id}`);
+            setEvent(response.data);
+        } catch (err: unknown) {
+            if (err && typeof err === 'object' && 'response' in err) {
+                const axiosErr = err as { response?: { data?: { error?: string } } };
+                setError(axiosErr.response?.data?.error || t('manage.failedToUpdate') || 'Failed to update event.');
+            } else {
+                setError(t('manage.failedToUpdate') || 'Failed to update event.');
             }
         } finally {
             setIsSubmitting(false);
@@ -121,7 +159,7 @@ export default function ManageEventPage() {
         setError(null);
         try {
             await api.post(`/events/${id}/ticket-types`, data);
-            setSuccessMessage('Ticket type added successfully!');
+            setSuccessMessage(t('manage.ticketAdded') || 'Ticket type added successfully!');
             setShowTicketForm(false);
             resetTicketForm();
             const response = await api.get(`/events/${id}`);
@@ -129,9 +167,9 @@ export default function ManageEventPage() {
         } catch (err: unknown) {
             if (err && typeof err === 'object' && 'response' in err) {
                 const axiosErr = err as { response?: { data?: { error?: string } } };
-                setError(axiosErr.response?.data?.error || 'Failed to add ticket type.');
+                setError(axiosErr.response?.data?.error || t('manage.failedToAddTicket') || 'Failed to add ticket type.');
             } else {
-                setError('Failed to add ticket type.');
+                setError(t('manage.failedToAddTicket') || 'Failed to add ticket type.');
             }
         } finally {
             setIsSubmitting(false);
@@ -143,15 +181,15 @@ export default function ManageEventPage() {
         setError(null);
         try {
             await api.post(`/events/${id}/publish`);
-            setSuccessMessage('Event published successfully!');
+            setSuccessMessage(t('manage.publishedSuccessfully') || 'Event published successfully!');
             const response = await api.get(`/events/${id}`);
             setEvent(response.data);
         } catch (err: unknown) {
             if (err && typeof err === 'object' && 'response' in err) {
                 const axiosErr = err as { response?: { data?: { error?: string } } };
-                setError(axiosErr.response?.data?.error || 'Failed to publish event.');
+                setError(axiosErr.response?.data?.error || t('manage.failedToPublish') || 'Failed to publish event.');
             } else {
-                setError('Failed to publish event.');
+                setError(t('manage.failedToPublish') || 'Failed to publish event.');
             }
         } finally {
             setIsSubmitting(false);
@@ -164,15 +202,15 @@ export default function ManageEventPage() {
         setError(null);
         try {
             await api.post(`/events/${id}/cancel`);
-            setSuccessMessage('Event cancelled successfully!');
+            setSuccessMessage(t('manage.cancelledSuccessfully') || 'Event cancelled successfully!');
             const response = await api.get(`/events/${id}`);
             setEvent(response.data);
         } catch (err: unknown) {
             if (err && typeof err === 'object' && 'response' in err) {
                 const axiosErr = err as { response?: { data?: { error?: string } } };
-                setError(axiosErr.response?.data?.error || 'Failed to cancel event.');
+                setError(axiosErr.response?.data?.error || t('manage.failedToCancel') || 'Failed to cancel event.');
             } else {
-                setError('Failed to cancel event.');
+                setError(t('manage.failedToCancel') || 'Failed to cancel event.');
             }
         } finally {
             setIsSubmitting(false);
@@ -245,7 +283,13 @@ export default function ManageEventPage() {
                     </div>
                 )}
 
-                {!isCancelled && (
+                {isRejected && (
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+                        {t('manage.rejectedDesc')}
+                    </div>
+                )}
+
+                {canEdit && (
                     <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('events.aboutEvent')}</h2>
                         <form onSubmit={handleEventSubmit(onUpdateEvent)} className="space-y-4">
@@ -315,7 +359,7 @@ export default function ManageEventPage() {
                                 disabled={isSubmitting}
                                 className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
                             >
-                                {isSubmitting ? t('manage.saving') || 'Saving...' : t('manage.save')}
+                                {isSubmitting ? t('manage.saving') : (isDraft || isRejected) ? t('manage.submitForReview') : t('manage.save')}
                             </button>
                         </form>
                     </div>
@@ -428,6 +472,17 @@ export default function ManageEventPage() {
                     )}
                 </div>
             </div>
+
+            {showSubmitConfirm && (
+                <ConfirmDialog
+                    title={t('manage.submitForReview')}
+                    message={t('manage.submitForReviewConfirm')}
+                    confirmLabel={t('manage.submitForReview')}
+                    onConfirm={handleConfirmSubmit}
+                    onClose={() => setShowSubmitConfirm(false)}
+                    isLoading={isSubmitting}
+                />
+            )}
         </div>
     );
 }
