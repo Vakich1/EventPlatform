@@ -1,11 +1,14 @@
 using EventPlatform.Application.Admin.Queries.GetAllUsers;
+using EventPlatform.Application.Admin.Commands.ApproveEvent;
 using EventPlatform.Application.Admin.Commands.ApproveOrganizer;
 using EventPlatform.Application.Admin.Commands.BlockUser;
 using EventPlatform.Application.Admin.Commands.CancelEventByAdmin;
 using EventPlatform.Application.Admin.Commands.CancelRegistration;
+using EventPlatform.Application.Admin.Commands.RejectEvent;
 using EventPlatform.Application.Admin.Commands.RejectOrganizer;
 using EventPlatform.Application.Admin.Commands.UnblockUser;
 using EventPlatform.Application.Admin.Queries.GetAllEvents;
+using EventPlatform.Application.Admin.Queries.GetPendingEvents;
 using EventPlatform.Application.Admin.Queries.GetPendingOrganizers;
 using EventPlatform.Application.Admin.Queries.GetStats;
 using EventPlatform.Application.Admin.Queries.GetUserById;
@@ -185,5 +188,42 @@ public static class AdminEndpoints
             })
             .WithName("RejectOrganizer")
             .WithSummary("Reject organizer (Admin only)");
+        
+        group.MapGet("/events/pending", async (
+                ISender sender,
+                CancellationToken cancellationToken,
+                string? searchTerm = null,
+                int page = 1,
+                int pageSize = 20) =>
+            {
+                var result = await sender.Send(
+                    new GetPendingEventsQuery(searchTerm, page, pageSize),
+                    cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithName("GetPendingEvents")
+            .WithSummary("Get pending event approvals (Admin only)");
+        
+        group.MapPost("/events/{eventId:guid}/approve", async (
+                Guid eventId,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                await sender.Send(new ApproveEventCommand(eventId), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithName("ApproveEvent")
+            .WithSummary("Approve event (Admin only)");
+        
+        group.MapPost("/events/{eventId:guid}/reject", async (
+                Guid eventId,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                await sender.Send(new RejectEventCommand(eventId), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithName("RejectEvent")
+            .WithSummary("Reject event (Admin only)");
     }
 }
