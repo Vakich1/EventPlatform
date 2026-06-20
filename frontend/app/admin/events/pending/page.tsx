@@ -9,25 +9,24 @@ import Navbar from '@/components/Navbar';
 import Pagination from '@/components/Pagination';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { formatDate, getStatusColor } from '@/lib/utils';
-import { Search, XCircle, Calendar, MapPin, Ticket, ArrowLeft } from 'lucide-react';
-import { goBack } from '@/lib/utils';
+import { ArrowLeft, Calendar, MapPin, Ticket, CheckCircle, XCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslation } from '@/i18n';
 
-const STATUS_OPTIONS = ['All', 'Draft', 'Published', 'Completed', 'Cancelled', 'UnderReview', 'Rejected'];
-
-export default function AdminEventsPage() {
+export default function AdminPendingEventsPage() {
     const router = useRouter();
     const { isAuthenticated, isLoading: authLoading, role } = useAuth();
     const { t } = useTranslation();
     const [events, setEvents] = useState<PagedResult<EventSummary> | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('All');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [cancelEvent, setCancelEvent] = useState<{ id: string; title: string } | null>(null);
-    const [isCancelLoading, setIsCancelLoading] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{
+        type: 'approve' | 'reject';
+        eventId: string;
+        eventTitle: string;
+    } | null>(null);
+    const [isActionLoading, setIsActionLoading] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !isAuthenticated) router.push('/auth/login');
@@ -37,20 +36,15 @@ export default function AdminEventsPage() {
         }
     }, [authLoading, isAuthenticated, role, router]);
 
-    const fetchEvents = async (search: string, status: string, page: number) => {
+    const fetchEvents = async (page: number) => {
         setIsLoading(true);
         try {
-            const response = await api.get<PagedResult<EventSummary>>('/admin/events', {
-                params: {
-                    searchTerm: search || undefined,
-                    status: status === 'All' ? undefined : status,
-                    page,
-                    pageSize: 10,
-                },
+            const response = await api.get<PagedResult<EventSummary>>('/admin/events/pending', {
+                params: { page, pageSize: 10 },
             });
             setEvents(response.data);
         } catch {
-            setError('Failed to load events.');
+            setError('Failed to load pending events.');
         } finally {
             setIsLoading(false);
         }
@@ -58,38 +52,32 @@ export default function AdminEventsPage() {
 
     useEffect(() => {
         if (isAuthenticated && role === 'Admin') {
-            fetchEvents('', 'All', 1);
+            fetchEvents(1);
         }
     }, [isAuthenticated, role]);
 
-    const handleSearch = () => {
-        fetchEvents(searchTerm, statusFilter, 1);
-    };
-
-    const handleStatusFilter = (status: string) => {
-        setStatusFilter(status);
-        fetchEvents(searchTerm, status, 1);
-    };
-
-    const handleCancelEvent = async () => {
-        if (!cancelEvent) return;
-        setIsCancelLoading(true);
+    const handleAction = async () => {
+        if (!confirmAction) return;
+        setIsActionLoading(true);
         try {
-            await api.post(`/admin/events/${cancelEvent.id}/cancel`);
+            if (confirmAction.type === 'approve') {
+                await api.post(`/admin/events/${confirmAction.eventId}/approve`);
+            } else {
+                await api.post(`/admin/events/${confirmAction.eventId}/reject`);
+            }
             setEvents(prev => {
                 if (!prev) return prev;
                 return {
                     ...prev,
-                    items: prev.items.map(e =>
-                        e.id === cancelEvent.id ? { ...e, status: 'Cancelled' } : e
-                    ),
+                    items: prev.items.filter(e => e.id !== confirmAction.eventId),
+                    totalCount: prev.totalCount - 1,
                 };
             });
-            setCancelEvent(null);
+            setConfirmAction(null);
         } catch {
-            setError('Failed to cancel event.');
+            setError('Failed to process request.');
         } finally {
-            setIsCancelLoading(false);
+            setIsActionLoading(false);
         }
     };
 
@@ -100,57 +88,23 @@ export default function AdminEventsPage() {
             <Navbar />
 
             <div className="max-w-6xl mx-auto px-4 py-8">
-                <button
-                    onClick={() => goBack('/admin')}
-                    className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4 cursor-pointer"
+                <Link
+                    href="/admin"
+                    className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     {t('back')}
-                </button>
+                </Link>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('admin.manageEvents')}</h1>
+                <div className="flex items-center gap-3 mb-6">
+                    <h1 className="text-2xl font-bold text-gray-900">{t('admin.pendingEventApprovals')}</h1>
+                </div>
 
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                         {error}
                     </div>
                 )}
-
-                <div className="flex gap-2 mb-4">
-                    <div className="flex-1 relative">
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            placeholder="Search events..."
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    <button
-                        onClick={handleSearch}
-                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
-                    >
-                        <Search className="w-4 h-4" />
-                        {t('search')}
-                    </button>
-                </div>
-
-                <div className="flex gap-2 mb-6">
-                    {STATUS_OPTIONS.map(status => (
-                        <button
-                            key={status}
-                            onClick={() => handleStatusFilter(status)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                                statusFilter === status
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                            }`}
-                        >
-                            {status === 'All' ? 'All' : t(`status.${status}`)}
-                        </button>
-                    ))}
-                </div>
 
                 {isLoading ? (
                     <div className="space-y-3">
@@ -162,8 +116,9 @@ export default function AdminEventsPage() {
                         ))}
                     </div>
                 ) : events?.items.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-xl shadow-sm text-gray-500">
-                        {t('admin.noEvents')}
+                    <div className="text-center py-16 bg-white rounded-xl shadow-sm">
+                        <Clock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500">{t('admin.noPendingEvents')}</p>
                     </div>
                 ) : (
                     <>
@@ -200,15 +155,20 @@ export default function AdminEventsPage() {
                                         >
                                             {t('events.view')}
                                         </Link>
-                                        {event.status !== 'Cancelled' && event.status !== 'Completed' && (
-                                            <button
-                                                onClick={() => setCancelEvent({ id: event.id, title: event.title })}
-                                                className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 border border-red-200 px-3 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
-                                            >
-                                                <XCircle className="w-3 h-3" />
-                                                {t('events.cancel')}
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={() => setConfirmAction({ type: 'approve', eventId: event.id, eventTitle: event.title })}
+                                            className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 cursor-pointer"
+                                        >
+                                            <CheckCircle className="w-4 h-4" />
+                                            {t('admin.approve')}
+                                        </button>
+                                        <button
+                                            onClick={() => setConfirmAction({ type: 'reject', eventId: event.id, eventTitle: event.title })}
+                                            className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 cursor-pointer"
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                            {t('admin.reject')}
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -220,22 +180,25 @@ export default function AdminEventsPage() {
                                 totalPages={events.totalPages}
                                 hasNextPage={events.hasNextPage}
                                 hasPreviousPage={events.hasPreviousPage}
-                                onPageChange={(page) => fetchEvents(searchTerm, statusFilter, page)}
+                                onPageChange={fetchEvents}
                             />
                         )}
                     </>
                 )}
             </div>
 
-            {cancelEvent && (
+            {confirmAction && (
                 <ConfirmDialog
-                    title={t('userDetail.cancelEvent')}
-                    message={t('userDetail.cancelEventConfirm').replace('{{event}}', cancelEvent.title)}
-                    confirmLabel={t('userDetail.cancelEvent')}
-                    danger
-                    onConfirm={handleCancelEvent}
-                    onClose={() => setCancelEvent(null)}
-                    isLoading={isCancelLoading}
+                    title={confirmAction.type === 'approve' ? t('admin.approveEvent') : t('admin.rejectEvent')}
+                    message={confirmAction.type === 'approve'
+                        ? t('admin.approveEventConfirm').replace('{{name}}', confirmAction.eventTitle)
+                        : t('admin.rejectEventConfirm').replace('{{name}}', confirmAction.eventTitle)
+                    }
+                    confirmLabel={confirmAction.type === 'approve' ? t('admin.approve') : t('admin.reject')}
+                    danger={confirmAction.type === 'reject'}
+                    onConfirm={handleAction}
+                    onClose={() => setConfirmAction(null)}
+                    isLoading={isActionLoading}
                 />
             )}
         </div>

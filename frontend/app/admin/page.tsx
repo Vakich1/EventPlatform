@@ -7,7 +7,7 @@ import { AdminStats } from '@/types';
 import api from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import StatsCard from '@/components/StatsCard';
-import { Users, Calendar, Ticket, Ban, CheckCircle, Clock, XCircle, FileText, ArrowLeft, UserCog, CalendarX, UserCheck } from 'lucide-react';
+import { Users, Calendar, Ticket, Ban, CheckCircle, Clock, XCircle, FileText, ArrowLeft, UserCog, CalendarX, UserCheck, ClipboardCheck } from 'lucide-react';
 import { goBack } from '@/lib/utils';
 import Link from 'next/link';
 import { useTranslation } from '@/i18n';
@@ -122,6 +122,18 @@ export default function AdminPage() {
                                 <div>
                                     <h3 className="font-semibold text-lg mb-1">{t('admin.organizerApprovals')}</h3>
                                     <p className="text-blue-200 text-sm">{t('admin.organizerApprovalsDesc')}</p>
+                                </div>
+                            </Link>
+                            <Link
+                                href="/admin/events/pending"
+                                className="flex-1 bg-blue-600 rounded-xl p-6 text-white hover:bg-blue-700 transition-colors flex items-center gap-4"
+                            >
+                                <div className="p-3 bg-blue-500 rounded-lg">
+                                    <ClipboardCheck className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1">{t('admin.eventApprovals')}</h3>
+                                    <p className="text-blue-200 text-sm">{t('admin.eventApprovalsDesc')}</p>
                                 </div>
                             </Link>
                         </div>
