@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Ban, Calendar, Ticket } from 'lucide-react';
+import { ArrowLeft, Ban, Calendar, Check, Ticket } from 'lucide-react';
 import { AdminRegistration, AdminUserDetail, EventSummary, PagedResult } from '@/types';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -19,7 +19,7 @@ import { apiError, fmt, formatDate, money, userStatus } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
 
 type Confirm =
-    | { kind: 'block' | 'unblock' }
+    | { kind: 'block' | 'unblock' | 'approve' }
     | { kind: 'event'; id: string; name: string }
     | { kind: 'registration'; id: string; name: string };
 
@@ -45,6 +45,7 @@ export default function AdminUserDetailPage() {
         setBusy(true);
         try {
             if (confirm.kind === 'block' || confirm.kind === 'unblock') await api.post(`/admin/users/${id}/${confirm.kind}`);
+            if (confirm.kind === 'approve') await api.post(`/admin/organizers/${id}/approve`);
             if (confirm.kind === 'event') await api.post(`/admin/events/${confirm.id}/cancel`);
             if (confirm.kind === 'registration') await api.post(`/admin/users/${id}/registrations/${confirm.id}/cancel`);
             setConfirm(null);
@@ -74,6 +75,9 @@ export default function AdminUserDetailPage() {
                             </div>
                             <p className="text-sm text-muted">{user.email} · {t(`ui.admin.roles.${user.role}`)} · {fmt(t('ui.admin.joinedOn'), { date: formatDate(user.createdAt, d) })}</p>
                         </div>
+                        {user.role === 'Organizer' && !user.isApprovedOrganizer && !user.isBlocked && (
+                            <button onClick={() => setConfirm({ kind: 'approve' })} className="btn btn-primary"><Check aria-hidden="true" />{t('ui.admin.approve')}</button>
+                        )}
                         {user.role !== 'Admin' && (user.isBlocked ? (
                             <button onClick={() => setConfirm({ kind: 'unblock' })} className="btn btn-secondary">{t('ui.admin.unblock')}</button>
                         ) : (
@@ -144,13 +148,14 @@ export default function AdminUserDetailPage() {
 
             {confirm && user && (
                 <ConfirmDialog
-                    danger={confirm.kind !== 'unblock'}
-                    title={confirm.kind === 'block' ? fmt(t('ui.admin.blockTitle'), { name: user.fullName })
+                    danger={confirm.kind !== 'unblock' && confirm.kind !== 'approve'}
+                    title={confirm.kind === 'approve' ? fmt(t('ui.admin.approveOrgTitle'), { name: user.fullName })
+                        : confirm.kind === 'block' ? fmt(t('ui.admin.blockTitle'), { name: user.fullName })
                         : confirm.kind === 'unblock' ? fmt(t('ui.admin.unblockTitle'), { name: user.fullName })
                             : confirm.kind === 'event' ? fmt(t('ui.admin.cancelEventTitle'), { name: confirm.name })
                                 : fmt(t('ui.admin.cancelRegTitle'), { name: 'name' in confirm ? confirm.name : '' })}
-                    message={confirm.kind === 'block' ? t('ui.admin.blockText') : confirm.kind === 'unblock' ? t('ui.admin.unblockText') : confirm.kind === 'event' ? t('ui.admin.cancelEventText') : t('ui.admin.cancelRegText')}
-                    confirmLabel={confirm.kind === 'block' ? t('ui.admin.block') : confirm.kind === 'unblock' ? t('ui.admin.unblock') : t('ui.admin.cancel')}
+                    message={confirm.kind === 'approve' ? t('ui.admin.approveOrgText') : confirm.kind === 'block' ? t('ui.admin.blockText') : confirm.kind === 'unblock' ? t('ui.admin.unblockText') : confirm.kind === 'event' ? t('ui.admin.cancelEventText') : t('ui.admin.cancelRegText')}
+                    confirmLabel={confirm.kind === 'approve' ? t('ui.admin.approve') : confirm.kind === 'block' ? t('ui.admin.block') : confirm.kind === 'unblock' ? t('ui.admin.unblock') : t('ui.admin.cancel')}
                     onConfirm={doConfirm}
                     onClose={() => setConfirm(null)}
                     isLoading={busy}
