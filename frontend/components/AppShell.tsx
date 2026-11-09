@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
-import { Calendar, CalendarCheck, CalendarPlus, Globe, LayoutDashboard, ListChecks, LogOut, LucideIcon, ShieldCheck, Ticket, UserPlus, Users } from 'lucide-react';
+import { Calendar, CalendarCheck, CalendarPlus, LayoutDashboard, ListChecks, LucideIcon, ShieldCheck, Ticket, UserPlus, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/i18n';
@@ -17,27 +17,9 @@ interface Item {
     count?: number;
 }
 
-function SideLink({ item }: { item: Item }) {
-    const Icon = item.icon;
-    return (
-        <Link
-            href={item.href}
-            aria-current={item.active ? 'page' : undefined}
-            className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm transition-colors ${item.active ? 'bg-brand-50 font-semibold text-brand-700' : 'font-medium text-muted hover:bg-neutral-bg hover:text-ink'}`}
-        >
-            <Icon className={`h-5 w-5 shrink-0 ${item.active ? 'text-brand-600' : 'text-subtle'}`} aria-hidden="true" />
-            <span className="flex-1 truncate">{item.label}</span>
-            {!!item.count && (
-                <span className="rounded-full bg-accent-500 px-[7px] text-xs font-medium leading-5 text-white">{item.count}</span>
-            )}
-        </Link>
-    );
-}
-
 export default function AppShell({ kind, children }: { kind: 'user' | 'admin'; children: ReactNode }) {
     const pathname = usePathname();
-    const router = useRouter();
-    const { role, isApprovedOrganizer, logout } = useAuth();
+    const { role, isApprovedOrganizer } = useAuth();
     const { t } = useTranslation();
     const [counts, setCounts] = useState<{ events: number; orgs: number }>({ events: 0, orgs: 0 });
     const canOrganize = role === 'Admin' || (role === 'Organizer' && isApprovedOrganizer);
@@ -86,25 +68,6 @@ export default function AppShell({ kind, children }: { kind: 'user' | 'admin'; c
         <div className="flex min-h-screen flex-col">
             <Navbar />
             <div className="flex flex-1">
-                <aside className="hidden w-[272px] shrink-0 flex-col border-r border-line bg-white px-4 py-6 lg:flex">
-                    <nav className="flex flex-1 flex-col gap-1" aria-label={t('ui.side.label')}>
-                        {groups.map((g, gi) => (
-                            <div key={g.label} className={`flex flex-col gap-1 ${gi > 0 ? 'mt-4' : ''}`}>
-                                <p className="caps-label mb-1 px-3 text-subtle">{g.label}</p>
-                                {g.items.map(item => <SideLink key={item.href + item.label} item={item} />)}
-                            </div>
-                        ))}
-                        <div className="flex-1" />
-                        {kind === 'admin' && <SideLink item={{ href: '/', label: t('ui.side.toCatalog'), icon: Globe, active: false }} />}
-                        <button
-                            onClick={() => { logout(); router.push('/'); }}
-                            className="flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium text-muted hover:bg-neutral-bg hover:text-ink"
-                        >
-                            <LogOut className="h-5 w-5 text-subtle" aria-hidden="true" />
-                            {t('nav.signOut')}
-                        </button>
-                    </nav>
-                </aside>
                 <main id="main" className="min-w-0 flex-1">
                     <div className="lg:hidden overflow-x-auto border-b border-line bg-white px-4 [scrollbar-width:none]">
                         <div className="flex gap-1 py-2">
@@ -115,7 +78,7 @@ export default function AppShell({ kind, children }: { kind: 'user' | 'admin'; c
                             ))}
                         </div>
                     </div>
-                    <div className="mx-auto flex max-w-[1104px] flex-col gap-6 px-4 pb-16 pt-6 sm:px-6 lg:px-10 lg:pt-8">
+                    <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 pb-16 pt-6 sm:px-6 lg:pt-8 xl:px-0">
                         {children}
                     </div>
                 </main>

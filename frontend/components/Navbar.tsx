@@ -3,11 +3,20 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { Globe, LogOut, Menu, Plus, Ticket, X } from 'lucide-react';
+import { Calendar, CalendarCheck, ChevronDown, Globe, LayoutDashboard, ListChecks, LogOut, LucideIcon, Menu, Plus, Ticket, UserPlus, Users, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/i18n';
 import Logo from '@/components/Logo';
 import Avatar from '@/components/ui/Avatar';
+import api from '@/lib/api';
+
+interface MenuItem {
+    href: string;
+    label: string;
+    icon: LucideIcon;
+    active: boolean;
+    count?: number;
+}
 
 export default function Navbar() {
     const { isAuthenticated, isLoading, role, isApprovedOrganizer, userName, logout } = useAuth();
@@ -16,15 +25,27 @@ export default function Navbar() {
     const router = useRouter();
     const [menuOpen, setMenuOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [adminOpen, setAdminOpen] = useState(false);
+    const [counts, setCounts] = useState<{ events: number; orgs: number }>({ events: 0, orgs: 0 });
     const profileRef = useRef<HTMLDivElement>(null);
+    const adminRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const onClick = (e: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+            if (adminRef.current && !adminRef.current.contains(e.target as Node)) setAdminOpen(false);
         };
         document.addEventListener('mousedown', onClick);
         return () => document.removeEventListener('mousedown', onClick);
     }, []);
+
+    useEffect(() => {
+        if (role !== 'Admin') return;
+        Promise.all([
+            api.get('/admin/events/pending', { params: { page: 1, pageSize: 1 } }).catch(() => null),
+            api.get('/admin/organizers/pending', { params: { page: 1, pageSize: 1 } }).catch(() => null),
+        ]).then(([e, o]) => setCounts({ events: e?.data?.totalCount ?? 0, orgs: o?.data?.totalCount ?? 0 }));
+    }, [role, pathname]);
 
     const handleLogout = () => {
         logout();
@@ -37,8 +58,17 @@ export default function Navbar() {
         { href: '/', label: t('ui.nav.events'), active: pathname === '/' || pathname.startsWith('/events/') && !pathname.startsWith('/events/create') },
         ...(isAuthenticated ? [{ href: '/dashboard', label: t('ui.nav.tickets'), active: pathname === '/dashboard' }] : []),
         ...(isAuthenticated && canCreateEvent ? [{ href: '/dashboard/events', label: t('ui.nav.myEvents'), active: pathname.startsWith('/dashboard/events') || pathname.startsWith('/events/create') }] : []),
-        ...(isAuthenticated && role === 'Admin' ? [{ href: '/admin', label: t('ui.nav.admin'), active: pathname.startsWith('/admin') }] : []),
     ];
+    const isAdmin = isAuthenticated && role === 'Admin';
+    const adminActive = pathname.startsWith('/admin');
+    const adminItems: MenuItem[] = [
+        { href: '/admin', label: t('ui.side.overview'), icon: LayoutDashboard, active: pathname === '/admin' },
+        { href: '/admin/events/pending', label: t('ui.side.pendingEvents'), icon: ListChecks, active: pathname.startsWith('/admin/events/pending'), count: counts.events },
+        { href: '/admin/organizers', label: t('ui.side.organizerRequests'), icon: UserPlus, active: pathname.startsWith('/admin/organizers'), count: counts.orgs },
+        { href: '/admin/events', label: t('ui.side.allEvents'), icon: Calendar, active: pathname === '/admin/events' },
+        { href: '/admin/users', label: t('ui.side.users'), icon: Users, active: pathname.startsWith('/admin/users') },
+    ];
+    const adminCount = counts.events + counts.orgs;
     const name = userName || t('ui.nav.profile');
 
     return (
@@ -60,6 +90,41 @@ export default function Navbar() {
                                 {l.label}
                             </Link>
                         ))}
+                        {isAdmin && (
+                            <div className="relative" ref={adminRef}>
+                                <button
+                                    onClick={() => setAdminOpen(o => !o)}
+                                    aria-expanded={adminOpen}
+                                    aria-haspopup="menu"
+                                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-[10px] px-3 py-2 text-sm transition-colors ${adminActive ? 'bg-brand-50 font-semibold text-brand-700' : 'font-medium text-muted hover:text-ink'}`}
+                                >
+                                    {t('ui.nav.admin')}
+                                    {adminCount > 0 && <span className="rounded-full bg-accent-500 px-[7px] text-xs font-medium leading-5 text-white">{adminCount}</span>}
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${adminOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                                </button>
+                                {adminOpen && (
+                                    <div role="menu" className="absolute left-0 top-full mt-2 w-64 rounded-[14px] border border-line bg-white p-1.5 shadow-card-hover">
+                                        {adminItems.map(item => {
+                                            const Icon = item.icon;
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    role="menuitem"
+                                                    href={item.href}
+                                                    aria-current={item.active ? 'page' : undefined}
+                                                    onClick={() => setAdminOpen(false)}
+                                                    className={`flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm ${item.active ? 'bg-brand-50 font-semibold text-brand-700' : 'font-medium text-muted hover:bg-neutral-bg hover:text-ink'}`}
+                                                >
+                                                    <Icon className={`h-4 w-4 shrink-0 ${item.active ? 'text-brand-600' : ''}`} aria-hidden="true" />
+                                                    <span className="flex-1 truncate">{item.label}</span>
+                                                    {!!item.count && <span className="rounded-full bg-accent-500 px-[7px] text-xs font-medium leading-5 text-white">{item.count}</span>}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -97,6 +162,12 @@ export default function Navbar() {
                                                 <Ticket className="h-4 w-4" aria-hidden="true" />
                                                 {t('ui.nav.tickets')}
                                             </Link>
+                                            {canCreateEvent && (
+                                                <Link role="menuitem" href="/dashboard/events" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm font-medium text-muted hover:bg-neutral-bg hover:text-ink">
+                                                    <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                                                    {t('ui.nav.myEvents')}
+                                                </Link>
+                                            )}
                                             <button role="menuitem" onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm font-medium text-muted hover:bg-neutral-bg hover:text-ink">
                                                 <LogOut className="h-4 w-4" aria-hidden="true" />
                                                 {t('nav.signOut')}
@@ -131,6 +202,16 @@ export default function Navbar() {
                                 {l.label}
                             </Link>
                         ))}
+                        {isAdmin && (
+                            <>
+                                <p className="caps-label mt-2 px-3 text-subtle">{t('ui.nav.admin')}</p>
+                                {adminItems.map(item => (
+                                    <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className={`rounded-[10px] px-3 py-2.5 text-sm ${item.active ? 'bg-brand-50 font-semibold text-brand-700' : 'font-medium text-muted'}`}>
+                                        {item.label}{item.count ? ` · ${item.count}` : ''}
+                                    </Link>
+                                ))}
+                            </>
+                        )}
                         {canCreateEvent && (
                             <Link href="/events/create" onClick={() => setMenuOpen(false)} className="rounded-[10px] px-3 py-2.5 text-sm font-medium text-muted">{t('nav.createEvent')}</Link>
                         )}
