@@ -344,7 +344,7 @@ const en = {
     map: {
       open: 'Pick on map',
       title: 'Pick a place on the map',
-      hint: 'Click the map to drop a pin. The address is filled in automatically.',
+      hint: 'Drag to pan, scroll to zoom. Click to drop a pin — the address fills in automatically.',
       address: 'Address',
       addressPlaceholder: 'City, street, venue',
       confirm: 'Confirm place',

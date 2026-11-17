@@ -14,17 +14,17 @@ import Alert from '@/components/ui/Alert';
 import Segmented from '@/components/ui/Segmented';
 
 const registerSchema = z.object({
-    firstName: z.string().min(1, 'First name is required').max(100),
-    lastName: z.string().min(1, 'Last name is required').max(100),
-    email: z.string().email('Invalid email address'),
+    firstName: z.string().min(1, 'ui.auth.errFirstName').max(100),
+    lastName: z.string().min(1, 'ui.auth.errLastName').max(100),
+    email: z.string().email('ui.auth.errEmail'),
     password: z.string()
-        .min(8, 'Password must be at least 8 characters')
-        .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-        .regex(/[0-9]/, 'Password must contain at least one number'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
+        .min(8, 'ui.auth.errPassMin')
+        .regex(/[A-Z]/, 'ui.auth.errPassUpper')
+        .regex(/[0-9]/, 'ui.auth.errPassDigit'),
+    confirmPassword: z.string().min(1, 'ui.auth.errConfirm'),
     role: z.enum(['User', 'Organizer']),
 }).refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'ui.auth.errMismatch',
     path: ['confirmPassword'],
 });
 
@@ -80,28 +80,28 @@ export default function RegisterPage() {
                     <div>
                         <label className="label" htmlFor="firstName">{t('auth.firstName')}</label>
                         <input id="firstName" {...register('firstName')} aria-invalid={!!errors.firstName} autoComplete="given-name" className="input" />
-                        {errors.firstName && <p className="field-error" role="alert">{errors.firstName.message}</p>}
+                        {errors.firstName && <p className="field-error" role="alert">{t(errors.firstName.message ?? '')}</p>}
                     </div>
                     <div>
                         <label className="label" htmlFor="lastName">{t('auth.lastName')}</label>
                         <input id="lastName" {...register('lastName')} aria-invalid={!!errors.lastName} autoComplete="family-name" className="input" />
-                        {errors.lastName && <p className="field-error" role="alert">{errors.lastName.message}</p>}
+                        {errors.lastName && <p className="field-error" role="alert">{t(errors.lastName.message ?? '')}</p>}
                     </div>
                 </div>
                 <div>
                     <label className="label" htmlFor="email">{t('auth.email')}</label>
                     {iconInput('email', Mail, 'email', 'email', 'you@example.com')}
-                    {errors.email && <p className="field-error" role="alert">{errors.email.message}</p>}
+                    {errors.email && <p className="field-error" role="alert">{t(errors.email.message ?? '')}</p>}
                 </div>
                 <div>
                     <label className="label" htmlFor="password">{t('auth.password')}</label>
                     {iconInput('password', Lock, 'password', 'new-password', '••••••••')}
-                    {errors.password ? <p className="field-error" role="alert">{errors.password.message}</p> : <p className="field-hint">{t('ui.auth.passwordHint')}</p>}
+                    {errors.password ? <p className="field-error" role="alert">{t(errors.password.message ?? '')}</p> : <p className="field-hint">{t('ui.auth.passwordHint')}</p>}
                 </div>
                 <div>
                     <label className="label" htmlFor="confirmPassword">{t('auth.confirmPassword')}</label>
                     {iconInput('confirmPassword', Lock, 'password', 'new-password', '••••••••')}
-                    {errors.confirmPassword && <p className="field-error" role="alert">{errors.confirmPassword.message}</p>}
+                    {errors.confirmPassword && <p className="field-error" role="alert">{t(errors.confirmPassword.message ?? '')}</p>}
                 </div>
                 <button type="submit" disabled={isLoading} className="btn btn-primary btn-lg w-full">
                     {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}

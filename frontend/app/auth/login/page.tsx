@@ -13,8 +13,8 @@ import AuthShell from '@/components/AuthShell';
 import Alert from '@/components/ui/Alert';
 
 const loginSchema = z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(1, 'Password is required'),
+    email: z.string().email('ui.auth.errEmail'),
+    password: z.string().min(1, 'ui.auth.errPassword'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -51,7 +51,7 @@ export default function LoginPage() {
                         <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-placeholder" aria-hidden="true" />
                         <input id="email" {...register('email')} aria-invalid={!!errors.email} autoComplete="email" type="email" className="input input-with-icon" placeholder="you@example.com" />
                     </div>
-                    {errors.email && <p className="field-error" role="alert">{errors.email.message}</p>}
+                    {errors.email && <p className="field-error" role="alert">{t(errors.email.message ?? '')}</p>}
                 </div>
                 <div>
                     <label className="label" htmlFor="password">{t('auth.password')}</label>
@@ -59,7 +59,7 @@ export default function LoginPage() {
                         <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-placeholder" aria-hidden="true" />
                         <input id="password" {...register('password')} aria-invalid={!!errors.password} autoComplete="current-password" type="password" className="input input-with-icon" placeholder="••••••••" />
                     </div>
-                    {errors.password && <p className="field-error" role="alert">{errors.password.message}</p>}
+                    {errors.password && <p className="field-error" role="alert">{t(errors.password.message ?? '')}</p>}
                 </div>
                 <button type="submit" disabled={isLoading} className="btn btn-primary btn-lg w-full">
                     {isLoading ? t('auth.signingIn') : t('auth.signIn')}

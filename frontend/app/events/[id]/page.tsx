@@ -126,10 +126,12 @@ export default function EventDetailPage() {
                 <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
                     <div className="flex min-w-0 flex-1 flex-col gap-6">
                         <div className="flex flex-col gap-4">
-                            <div className="flex flex-wrap items-center gap-3">
-                                <h1 className="min-w-0 flex-1 text-[26px] font-bold leading-8 tracking-tight text-ink md:text-[32px] md:leading-10">{event.title}</h1>
-                                <StatusBadge status={event.status} size="md" />
-                            </div>
+                            <h1 className="min-w-0 text-[26px] font-bold leading-8 tracking-tight text-ink md:text-[32px] md:leading-10">
+                                {event.title}
+                                <span className="ml-3 inline-flex align-middle">
+                                    <StatusBadge status={event.status} size="md" />
+                                </span>
+                            </h1>
                             <div className="flex items-center gap-2.5">
                                 <Avatar name={event.organizerName} />
                                 <div>
