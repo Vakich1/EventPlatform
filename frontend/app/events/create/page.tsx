@@ -3,27 +3,29 @@
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, MapPin, Send } from 'lucide-react';
+import { ArrowLeft, MapPin, Send } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import EventCard from '@/components/EventCard';
 import PageHeader from '@/components/ui/PageHeader';
 import Stepper from '@/components/ui/Stepper';
 import Alert from '@/components/ui/Alert';
+import DateTimePicker from '@/components/ui/DateTimePicker';
+import MapPicker from '@/components/ui/MapPicker';
 import { apiError, fmt } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
 
 const createEventSchema = z.object({
-    title: z.string().min(1, 'Title is required').max(200),
-    description: z.string().min(1, 'Description is required').max(5000),
-    location: z.string().min(1, 'Location is required').max(300),
-    startDate: z.string().min(1, 'Start Date is required'),
-    endDate: z.string().min(1, 'End Date is required'),
+    title: z.string().min(1, 'ui.create.errTitle').max(200),
+    description: z.string().min(1, 'ui.create.errDescription').max(5000),
+    location: z.string().min(1, 'ui.create.errLocation').max(300),
+    startDate: z.string().min(1, 'ui.create.errStart'),
+    endDate: z.string().min(1, 'ui.create.errEnd'),
 }).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
-    message: 'End date must be after start date',
+    message: 'ui.create.errEndAfter',
     path: ['endDate'],
 });
 
@@ -34,7 +36,8 @@ export default function CreateEventPage() {
     const { t } = useTranslation();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<CreateEventForm>({ resolver: zodResolver(createEventSchema) });
+    const [mapOpen, setMapOpen] = useState(false);
+    const { register, handleSubmit, watch, control, setValue, formState: { errors } } = useForm<CreateEventForm>({ resolver: zodResolver(createEventSchema) });
     const values = watch();
 
     const onSubmit = async (data: CreateEventForm) => {
@@ -48,7 +51,7 @@ export default function CreateEventPage() {
             });
             router.push(`/dashboard/events/${response.data.id}/manage`);
         } catch (err) {
-            setError(apiError(err, 'Failed to create event.'));
+            setError(apiError(err, t('ui.create.failed')));
         } finally {
             setIsLoading(false);
         }
@@ -71,32 +74,60 @@ export default function CreateEventPage() {
                     <div>
                         <label className="label" htmlFor="title">{t('ui.create.name')}</label>
                         <input id="title" {...register('title')} aria-invalid={!!errors.title} className="input" placeholder={t('events.titlePlaceholder')} />
-                        {errors.title && <p className="field-error">{errors.title.message}</p>}
+                        {errors.title && <p className="field-error">{t(errors.title.message ?? '')}</p>}
                     </div>
                     <div>
                         <label className="label" htmlFor="description">{t('ui.create.description')}</label>
                         <textarea id="description" {...register('description')} aria-invalid={!!errors.description} rows={5} className="input" placeholder={t('events.descriptionPlaceholder')} />
-                        {errors.description ? <p className="field-error">{errors.description.message}</p> : <p className="field-hint">{fmt(t('ui.create.chars'), { count: values.description?.length ?? 0 })}</p>}
+                        {errors.description ? <p className="field-error">{t(errors.description.message ?? '')}</p> : <p className="field-hint">{fmt(t('ui.create.chars'), { count: values.description?.length ?? 0 })}</p>}
                     </div>
-                    <div>
+                    <div className="flex flex-col gap-2">
                         <label className="label" htmlFor="location">{t('ui.create.place')}</label>
                         <div className="relative">
                             <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-placeholder" aria-hidden="true" />
                             <input id="location" {...register('location')} aria-invalid={!!errors.location} className="input input-with-icon" placeholder={t('events.locationPlaceholder')} />
                         </div>
-                        {errors.location && <p className="field-error">{errors.location.message}</p>}
+                        {errors.location && <p className="field-error">{t(errors.location.message ?? '')}</p>}
+                        <button type="button" className="btn btn-secondary btn-sm self-start" onClick={() => setMapOpen(true)}>
+                            <MapPin aria-hidden="true" />
+                            {t('ui.map.open')}
+                        </button>
                     </div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {(['startDate', 'endDate'] as const).map(f => (
-                            <div key={f}>
-                                <label className="label" htmlFor={f}>{f === 'startDate' ? t('ui.create.start') : t('ui.create.end')}</label>
-                                <div className="relative">
-                                    <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-placeholder" aria-hidden="true" />
-                                    <input id={f} {...register(f)} aria-invalid={!!errors[f]} type="datetime-local" min={minDateString} className="input input-with-icon" />
-                                </div>
-                                {errors[f] && <p className="field-error">{errors[f]?.message}</p>}
-                            </div>
-                        ))}
+                        <div>
+                            <label className="label" htmlFor="startDate">{t('ui.create.start')}</label>
+                            <Controller
+                                name="startDate"
+                                control={control}
+                                render={({ field }) => (
+                                    <DateTimePicker
+                                        id="startDate"
+                                        value={field.value || ''}
+                                        onChange={field.onChange}
+                                        min={minDateString}
+                                        invalid={!!errors.startDate}
+                                    />
+                                )}
+                            />
+                            {errors.startDate && <p className="field-error">{t(errors.startDate.message ?? '')}</p>}
+                        </div>
+                        <div>
+                            <label className="label" htmlFor="endDate">{t('ui.create.end')}</label>
+                            <Controller
+                                name="endDate"
+                                control={control}
+                                render={({ field }) => (
+                                    <DateTimePicker
+                                        id="endDate"
+                                        value={field.value || ''}
+                                        onChange={field.onChange}
+                                        min={values.startDate || minDateString}
+                                        invalid={!!errors.endDate}
+                                    />
+                                )}
+                            />
+                            {errors.endDate && <p className="field-error">{t(errors.endDate.message ?? '')}</p>}
+                        </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-1">
                         <Link href="/dashboard/events" className="btn btn-secondary">{t('cancel')}</Link>
@@ -128,6 +159,16 @@ export default function CreateEventPage() {
                     <Alert tone="warning" title={t('ui.create.noteTitle')}>{t('ui.create.noteText')}</Alert>
                 </div>
             </div>
+
+            <MapPicker
+                open={mapOpen}
+                initialAddress={values.location}
+                onClose={() => setMapOpen(false)}
+                onConfirm={(address) => {
+                    setValue('location', address, { shouldValidate: true });
+                    setMapOpen(false);
+                }}
+            />
         </AppShell>
     );
 }

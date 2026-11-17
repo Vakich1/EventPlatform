@@ -126,8 +126,10 @@ export default function EventDetailPage() {
                 <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
                     <div className="flex min-w-0 flex-1 flex-col gap-6">
                         <div className="flex flex-col gap-4">
-                            <div><StatusBadge status={event.status} size="md" /></div>
-                            <h1 className="text-[26px] font-bold leading-8 tracking-tight text-ink md:text-[32px] md:leading-10">{event.title}</h1>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <h1 className="min-w-0 flex-1 text-[26px] font-bold leading-8 tracking-tight text-ink md:text-[32px] md:leading-10">{event.title}</h1>
+                                <StatusBadge status={event.status} size="md" />
+                            </div>
                             <div className="flex items-center gap-2.5">
                                 <Avatar name={event.organizerName} />
                                 <div>
@@ -161,7 +163,7 @@ export default function EventDetailPage() {
                         </section>
                     </div>
 
-                    <aside className="card flex w-full flex-col gap-4 p-5 lg:sticky lg:top-24 lg:w-[400px] lg:shrink-0">
+                    <aside className="flex w-full flex-col gap-4 lg:sticky lg:top-24 lg:w-[400px] lg:shrink-0">
                         {justRegistered && hasActive && (
                             <Alert
                                 tone="success"
@@ -171,54 +173,56 @@ export default function EventDetailPage() {
                                 {fmt(t('ui.event.successText'), { ticket: regTicket ? `${regTicket.name} · ${regTicket.isFree ? t('free') : `$${money(regTicket.price)}`}` : registration?.ticketTypeName ?? '' })}
                             </Alert>
                         )}
-                        <div>
-                            <h2 className="text-lg font-semibold text-ink">{t('ui.event.tickets')}</h2>
-                            <p className="text-sm text-muted">{t('ui.event.chooseTicket')}</p>
-                        </div>
-                        {!isAuthenticated && onSale && (
-                            <Alert tone="info" title={t('ui.event.loginTitle')} action={<Link href="/auth/login" className="btn btn-secondary btn-sm">{t('ui.event.login')}</Link>}>
-                                {t('ui.event.loginText')}
-                            </Alert>
-                        )}
-                        {!onSale && <Alert tone="warning" title={t('ui.event.notOnSale')}>{t('ui.event.notOnSaleText')}</Alert>}
-                        {error && <Alert tone="danger">{error}</Alert>}
+                        <div className="card flex flex-col gap-4 p-5">
+                            <div>
+                                <h2 className="text-lg font-semibold text-ink">{t('ui.event.tickets')}</h2>
+                                <p className="text-sm text-muted">{t('ui.event.chooseTicket')}</p>
+                            </div>
+                            {!isAuthenticated && onSale && (
+                                <Alert tone="info" title={t('ui.event.loginTitle')} action={<Link href="/auth/login" className="btn btn-secondary btn-sm">{t('ui.event.login')}</Link>}>
+                                    {t('ui.event.loginText')}
+                                </Alert>
+                            )}
+                            {!onSale && <Alert tone="warning" title={t('ui.event.notOnSale')}>{t('ui.event.notOnSaleText')}</Alert>}
+                            {error && <Alert tone="danger">{error}</Alert>}
 
-                        {event.ticketTypes.length === 0 && <p className="text-sm text-subtle">{t('ui.event.noTicketTypes')}</p>}
-                        {event.ticketTypes.map(tt => {
-                            const mine = hasActive && registration?.ticketTypeId === tt.id;
-                            const soldOut = tt.availableQuantity === 0;
-                            return (
-                                <div key={tt.id} className={`flex items-center gap-3 rounded-[14px] border p-4 ${mine ? 'border-success-border bg-success-bg' : 'border-line bg-white'}`}>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-ink">{tt.name}</p>
-                                        <p className={`text-lg font-semibold leading-[26px] ${tt.isFree ? 'text-success-fg' : soldOut ? 'text-subtle' : 'text-ink'}`}>
-                                            {tt.isFree ? t('free') : `$${money(tt.price)}`}
-                                        </p>
-                                        <p className="text-xs font-medium text-subtle">
-                                            {soldOut ? fmt(t('ui.event.quotaFull'), { total: tt.totalQuantity }) : fmt(t('ui.event.quota'), { available: tt.availableQuantity, total: tt.totalQuantity })}
-                                        </p>
+                            {event.ticketTypes.length === 0 && <p className="text-sm text-subtle">{t('ui.event.noTicketTypes')}</p>}
+                            {event.ticketTypes.map(tt => {
+                                const mine = hasActive && registration?.ticketTypeId === tt.id;
+                                const soldOut = tt.availableQuantity === 0;
+                                return (
+                                    <div key={tt.id} className={`flex items-center gap-3 rounded-[14px] border p-4 ${mine ? 'border-success-border bg-success-bg' : 'border-line bg-white'}`}>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-ink">{tt.name}</p>
+                                            <p className={`text-lg font-semibold leading-[26px] ${tt.isFree ? 'text-success-fg' : soldOut ? 'text-subtle' : 'text-ink'}`}>
+                                                {tt.isFree ? t('free') : `$${money(tt.price)}`}
+                                            </p>
+                                            <p className="text-xs font-medium text-subtle">
+                                                {soldOut ? fmt(t('ui.event.quotaFull'), { total: tt.totalQuantity }) : fmt(t('ui.event.quota'), { available: tt.availableQuantity, total: tt.totalQuantity })}
+                                            </p>
+                                        </div>
+                                        {mine ? (
+                                            <span className="flex items-center gap-1.5 text-sm font-semibold text-success-fg">
+                                                <CircleCheck className="h-[18px] w-[18px]" aria-hidden="true" />
+                                                {t('ui.event.registered')}
+                                            </span>
+                                        ) : onSale && (
+                                            <button
+                                                onClick={() => handleTicket(tt)}
+                                                disabled={soldOut || busyTicket === tt.id || hasActive}
+                                                className={`btn ${soldOut ? 'btn-secondary' : 'btn-primary'}`}
+                                            >
+                                                {busyTicket === tt.id ? t('events.processing') : soldOut ? t('ui.event.soldOut') : tt.isFree ? t('ui.event.register') : fmt(t('ui.event.buy'), { price: money(tt.price) })}
+                                            </button>
+                                        )}
                                     </div>
-                                    {mine ? (
-                                        <span className="flex items-center gap-1.5 text-sm font-semibold text-success-fg">
-                                            <CircleCheck className="h-[18px] w-[18px]" aria-hidden="true" />
-                                            {t('ui.event.registered')}
-                                        </span>
-                                    ) : onSale && (
-                                        <button
-                                            onClick={() => handleTicket(tt)}
-                                            disabled={soldOut || busyTicket === tt.id || hasActive}
-                                            className={`btn ${soldOut ? 'btn-secondary' : 'btn-primary'}`}
-                                        >
-                                            {busyTicket === tt.id ? t('events.processing') : soldOut ? t('ui.event.soldOut') : tt.isFree ? t('ui.event.register') : fmt(t('ui.event.buy'), { price: money(tt.price) })}
-                                        </button>
-                                    )}
-                                </div>
-                            );
-                        })}
-                        <p className="flex items-start gap-2 text-xs font-medium text-subtle">
-                            <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                            {t('ui.event.note')}
-                        </p>
+                                );
+                            })}
+                            <p className="flex items-start gap-2 text-xs font-medium text-subtle">
+                                <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                                {t('ui.event.note')}
+                            </p>
+                        </div>
                     </aside>
                 </div>
             </main>

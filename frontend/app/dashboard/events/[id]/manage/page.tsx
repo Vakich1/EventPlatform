@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Ban, Check, DollarSign, Eye, Plus, ScanLine, Send, Ticket } from 'lucide-react';
+import { ArrowLeft, Ban, Check, DollarSign, Eye, MapPin, Plus, ScanLine, Send, Ticket } from 'lucide-react';
 import api from '@/lib/api';
 import { EventDetail } from '@/types';
 import AppShell from '@/components/AppShell';
@@ -18,6 +18,8 @@ import Stepper from '@/components/ui/Stepper';
 import Alert from '@/components/ui/Alert';
 import EmptyState from '@/components/ui/EmptyState';
 import ProgressBar from '@/components/ui/ProgressBar';
+import DateTimePicker from '@/components/ui/DateTimePicker';
+import MapPicker from '@/components/ui/MapPicker';
 import { apiError, fmt, formatDate, money } from '@/lib/utils';
 import { useTranslation } from '@/i18n';
 
@@ -60,8 +62,10 @@ export default function ManageEventPage() {
     const [error, setError] = useState<string | null>(null);
     const [confirm, setConfirm] = useState<null | 'submit' | 'cancel'>(null);
     const [pending, setPending] = useState<UpdateEventForm | null>(null);
+    const [mapOpen, setMapOpen] = useState(false);
 
     const eventForm = useForm<UpdateEventForm>({ resolver: zodResolver(updateEventSchema) });
+    const eventValues = eventForm.watch();
     const resetEventForm = eventForm.reset;
     const ticketForm = useForm<AddTicketTypeForm>({ resolver: zodResolver(addTicketTypeSchema), defaultValues: { price: 0, totalQuantity: 100 } });
 
@@ -274,19 +278,51 @@ export default function ManageEventPage() {
                                 <textarea id="m-desc" {...eventForm.register('description')} rows={4} className="input" />
                                 {eventForm.formState.errors.description && <p className="field-error">{eventForm.formState.errors.description.message}</p>}
                             </div>
-                            <div>
+                            <div className="flex flex-col gap-2">
                                 <label className="label" htmlFor="m-loc">{t('ui.create.place')}</label>
-                                <input id="m-loc" {...eventForm.register('location')} className="input" />
+                                <div className="relative">
+                                    <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-placeholder" aria-hidden="true" />
+                                    <input id="m-loc" {...eventForm.register('location')} className="input input-with-icon" />
+                                </div>
                                 {eventForm.formState.errors.location && <p className="field-error">{eventForm.formState.errors.location.message}</p>}
+                                {editable && (
+                                    <button type="button" className="btn btn-secondary btn-sm self-start" onClick={() => setMapOpen(true)}>
+                                        <MapPin aria-hidden="true" />
+                                        {t('ui.map.open')}
+                                    </button>
+                                )}
                             </div>
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <label className="label" htmlFor="m-start">{t('ui.create.start')}</label>
-                                    <input id="m-start" {...eventForm.register('startDate')} type="datetime-local" className="input" />
+                                    <Controller
+                                        name="startDate"
+                                        control={eventForm.control}
+                                        render={({ field }) => (
+                                            <DateTimePicker
+                                                id="m-start"
+                                                value={field.value || ''}
+                                                onChange={field.onChange}
+                                                invalid={!!eventForm.formState.errors.startDate}
+                                            />
+                                        )}
+                                    />
                                 </div>
                                 <div>
                                     <label className="label" htmlFor="m-end">{t('ui.create.end')}</label>
-                                    <input id="m-end" {...eventForm.register('endDate')} type="datetime-local" className="input" />
+                                    <Controller
+                                        name="endDate"
+                                        control={eventForm.control}
+                                        render={({ field }) => (
+                                            <DateTimePicker
+                                                id="m-end"
+                                                value={field.value || ''}
+                                                onChange={field.onChange}
+                                                min={eventValues.startDate}
+                                                invalid={!!eventForm.formState.errors.endDate}
+                                            />
+                                        )}
+                                    />
                                     {eventForm.formState.errors.endDate && <p className="field-error">{eventForm.formState.errors.endDate.message}</p>}
                                 </div>
                             </div>
@@ -355,6 +391,15 @@ export default function ManageEventPage() {
                     isLoading={isSubmitting}
                 />
             )}
+            <MapPicker
+                open={mapOpen}
+                initialAddress={eventValues.location}
+                onClose={() => setMapOpen(false)}
+                onConfirm={(address) => {
+                    eventForm.setValue('location', address, { shouldValidate: true });
+                    setMapOpen(false);
+                }}
+            />
         </AppShell>
     );
 }

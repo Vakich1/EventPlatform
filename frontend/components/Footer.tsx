@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useTranslation } from '@/i18n';
 
@@ -12,12 +13,12 @@ export default function Footer() {
                     <Logo />
                     <span className="text-xs font-medium text-subtle">© 2026 EventPlatform</span>
                 </div>
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-muted">
-                    <span>{t('ui.footer.organizers')}</span>
-                    <span>{t('ui.footer.help')}</span>
-                    <span>{t('ui.footer.terms')}</span>
-                    <span>{t('ui.footer.privacy')}</span>
-                </div>
+                <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-muted" aria-label={t('ui.footer.nav')}>
+                    <Link href="/for-organizers" className="hover:text-ink">{t('ui.footer.organizers')}</Link>
+                    <Link href="/help" className="hover:text-ink">{t('ui.footer.help')}</Link>
+                    <Link href="/terms" className="hover:text-ink">{t('ui.footer.terms')}</Link>
+                    <Link href="/privacy" className="hover:text-ink">{t('ui.footer.privacy')}</Link>
+                </nav>
             </div>
         </footer>
     );
