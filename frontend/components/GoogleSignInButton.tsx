@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { useTranslation } from '@/i18n';
+import api from '@/lib/api';
 
 declare global {
     interface Window {
@@ -26,11 +27,27 @@ export default function GoogleSignInButton({
 }) {
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
-    const [ready, setReady] = useState(false);
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const [scriptReady, setScriptReady] = useState(false);
+    const [clientId, setClientId] = useState<string | null>(null);
+    const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
-        if (!ready || !clientId || !containerRef.current || !window.google || disabled) return;
+        let cancelled = false;
+        api.get<{ clientId?: string | null }>('/auth/google/config')
+            .then(r => {
+                if (!cancelled) setClientId(r.data.clientId?.trim() || null);
+            })
+            .catch(() => {
+                if (!cancelled) setClientId(null);
+            })
+            .finally(() => {
+                if (!cancelled) setLoaded(true);
+            });
+        return () => { cancelled = true; };
+    }, []);
+
+    useEffect(() => {
+        if (!scriptReady || !clientId || !containerRef.current || !window.google || disabled) return;
         containerRef.current.innerHTML = '';
         window.google.accounts.id.initialize({
             client_id: clientId,
@@ -45,9 +62,9 @@ export default function GoogleSignInButton({
             text: 'continue_with',
             shape: 'rectangular',
         });
-    }, [ready, clientId, disabled, onCredential]);
+    }, [scriptReady, clientId, disabled, onCredential]);
 
-    if (!clientId) {
+    if (loaded && !clientId) {
         return (
             <p className="text-center text-xs text-muted">
                 {t('ui.auth.googleNotConfigured')}
@@ -55,12 +72,14 @@ export default function GoogleSignInButton({
         );
     }
 
+    if (!loaded) return null;
+
     return (
         <>
             <Script
                 src="https://accounts.google.com/gsi/client"
                 strategy="afterInteractive"
-                onLoad={() => setReady(true)}
+                onLoad={() => setScriptReady(true)}
             />
             <div ref={containerRef} className={`flex justify-center ${disabled ? 'pointer-events-none opacity-60' : ''}`} />
         </>

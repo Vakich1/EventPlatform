@@ -509,7 +509,7 @@ const ru = {
       signUp: 'Зарегистрироваться',
       haveAccount: 'Уже есть аккаунт?',
       or: 'или',
-      googleNotConfigured: 'Google вход не настроен (NEXT_PUBLIC_GOOGLE_CLIENT_ID).',
+      googleNotConfigured: 'Google вход не настроен (GoogleSettings:ClientId на API).',
       googleFailed: 'Не удалось войти через Google.',
       twoFactorTitle: 'Двухфакторная аутентификация',
       twoFactorSubtitle: 'Введите код из приложения-аутентификатора',

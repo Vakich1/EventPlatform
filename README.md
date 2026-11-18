@@ -99,11 +99,12 @@ npm run dev
 
 **7. (Optional) Google sign-in**
 
-Create an OAuth 2.0 Client ID (Web) in Google Cloud Console and set the same value in:
+Create an OAuth 2.0 Web Client ID in Google Cloud Console and set it once on the API:
 
-- `GoogleSettings:ClientId` (API `appsettings` / compose env `GoogleSettings__ClientId`)
-- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (frontend)
+- local: `GoogleSettings:ClientId` in `src/EventPlatform.API/appsettings.json` (or Development)
+- docker: `GoogleSettings__ClientId` / env `GOOGLE_CLIENT_ID` in compose
 
+The frontend reads it from `GET /api/auth/google/config`.  
 Authorized JavaScript origins: `http://localhost:3000`
 
 **8. Open the app**

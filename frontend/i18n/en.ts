@@ -509,7 +509,7 @@ const en = {
       signUp: 'Sign up',
       haveAccount: 'Already have an account?',
       or: 'or',
-      googleNotConfigured: 'Google sign-in is not configured (NEXT_PUBLIC_GOOGLE_CLIENT_ID).',
+      googleNotConfigured: 'Google sign-in is not configured (set GoogleSettings:ClientId on the API).',
       googleFailed: 'Google sign-in failed.',
       twoFactorTitle: 'Two-factor authentication',
       twoFactorSubtitle: 'Enter the code from your authenticator app',

@@ -8,6 +8,7 @@ using EventPlatform.Application.Auth.Commands.SetupTwoFactor;
 using EventPlatform.Application.Auth.Commands.VerifyTwoFactor;
 using EventPlatform.Application.Auth.Queries.GetTwoFactorStatus;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 
 namespace EventPlatform.API.Endpoints;
 
@@ -51,6 +52,18 @@ public static class AuthEndpoints
         })
         .WithName("VerifyTwoFactor")
         .WithSummary("Complete login with authenticator code")
+        .AllowAnonymous();
+
+        group.MapGet("/google/config", (IConfiguration configuration) =>
+        {
+            var clientId = configuration["GoogleSettings:ClientId"];
+            return Results.Ok(new
+            {
+                clientId = string.IsNullOrWhiteSpace(clientId) ? null : clientId
+            });
+        })
+        .WithName("GetGoogleAuthConfig")
+        .WithSummary("Public Google OAuth client id for the frontend button")
         .AllowAnonymous();
 
         group.MapPost("/google", async (
