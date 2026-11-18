@@ -8,18 +8,28 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(ApplicationDbContext context)
     {
-        if (await context.Users.AnyAsync())
+        var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@eventplatform.com");
+        if (adminUser is null)
+        {
+            adminUser = User.Create("admin@eventplatform.com", BCrypt.Net.BCrypt.HashPassword("Admin123!"), "Admin", "User");
+            adminUser.SetRole(UserRole.Admin);
+            context.Users.Add(adminUser);
+        }
+
+        var testUser = await context.Users.FirstOrDefaultAsync(u => u.Email == "test@test.com");
+        if (testUser is null)
+        {
+            testUser = User.Create("test@test.com", BCrypt.Net.BCrypt.HashPassword("Test123!"), "Test", "User");
+            testUser.SetRole(UserRole.Organizer);
+            testUser.ApproveAsOrganizer();
+            context.Users.Add(testUser);
+        }
+
+        if (context.ChangeTracker.HasChanges())
+            await context.SaveChangesAsync();
+
+        if (await context.Events.AnyAsync())
             return;
-
-        var adminUser = User.Create("admin@eventplatform.com", BCrypt.Net.BCrypt.HashPassword("Admin123!"), "Admin", "User");
-        adminUser.SetRole(UserRole.Admin);
-
-        var testUser = User.Create("test@test.com", BCrypt.Net.BCrypt.HashPassword("Test123!"), "Test", "User");
-        testUser.SetRole(UserRole.Organizer);
-        testUser.ApproveAsOrganizer();
-
-        context.Users.AddRange(adminUser, testUser);
-        await context.SaveChangesAsync();
 
         var events = new (string Title, string Description, string Location, EventStatus Status, DateTime Start, DateTime End, (string Name, decimal Price, int Qty)[] Tickets)[]
         {
