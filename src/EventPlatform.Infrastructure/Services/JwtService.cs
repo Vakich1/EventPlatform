@@ -56,4 +56,62 @@ public class JwtService : IJwtService
         rng.GetBytes(randomBytes);
         return Convert.ToBase64String(randomBytes);
     }
+
+    public string GenerateTwoFactorToken(Guid userId)
+    {
+        var secret = _configuration["JwtSettings:Secret"]!;
+        var issuer = _configuration["JwtSettings:Issuer"]!;
+        var audience = _configuration["JwtSettings:Audience"]!;
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims:
+            [
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim("token_use", "two_factor"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            ],
+            expires: DateTime.UtcNow.AddMinutes(5),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public Guid? ValidateTwoFactorToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
+
+        try
+        {
+            var secret = _configuration["JwtSettings:Secret"]!;
+            var issuer = _configuration["JwtSettings:Issuer"]!;
+            var audience = _configuration["JwtSettings:Audience"]!;
+            var handler = new JwtSecurityTokenHandler();
+            var principal = handler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = issuer,
+                ValidAudience = audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+                ClockSkew = TimeSpan.Zero
+            }, out _);
+
+            if (principal.FindFirst("token_use")?.Value != "two_factor")
+                return null;
+
+            var id = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            return Guid.TryParse(id, out var userId) ? userId : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

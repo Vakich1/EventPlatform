@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { AuthResult } from '@/types'
+import { AuthResult, LoginOutcome } from '@/types'
 import api from '@/lib/api';
 
 interface AuthContextType {
@@ -10,7 +10,9 @@ interface AuthContextType {
     role: string | null;
     isApprovedOrganizer: boolean;
     userName: string | null;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<LoginOutcome>;
+    verifyTwoFactor: (twoFactorToken: string, code: string) => Promise<void>;
+    loginWithGoogle: (idToken: string) => Promise<LoginOutcome>;
     register: (email: string, password: string, firstName: string, lastName: string, role?: string) => Promise<void>;
     logout: () => void;
 }
@@ -59,6 +61,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isApprovedOrganizer, setIsApprovedOrganizer] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
 
+    const applySession = useCallback((accessToken: string, refreshToken: string) => {
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        document.cookie = `accessToken=${accessToken}; path=/; max-age=3600`;
+        setIsAuthenticated(true);
+        setRole(decodeRole(accessToken));
+        setIsApprovedOrganizer(decodeIsApprovedOrganizer(accessToken));
+        setUserName(decodeName(accessToken));
+    }, []);
+
+    const resolveAuthResult = useCallback((data: AuthResult): LoginOutcome => {
+        if (data.requiresTwoFactor && data.twoFactorToken) {
+            return { requiresTwoFactor: true, twoFactorToken: data.twoFactorToken };
+        }
+        if (!data.accessToken || !data.refreshToken) {
+            throw new Error('Invalid auth response');
+        }
+        applySession(data.accessToken, data.refreshToken);
+        return { requiresTwoFactor: false };
+    }, [applySession]);
+
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         setIsAuthenticated(!!token);
@@ -70,16 +93,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string) => {
         const response = await api.post<AuthResult>('/auth/login', { email, password });
-        const { accessToken, refreshToken } = response.data;
+        return resolveAuthResult(response.data);
+    };
 
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-        document.cookie = `accessToken=${accessToken}; path=/; max-age=3600`;
+    const verifyTwoFactor = async (twoFactorToken: string, code: string) => {
+        const response = await api.post<AuthResult>('/auth/login/2fa', { twoFactorToken, code });
+        const outcome = resolveAuthResult(response.data);
+        if (outcome.requiresTwoFactor) {
+            throw new Error('Unexpected two-factor challenge');
+        }
+    };
 
-        setIsAuthenticated(true);
-        setRole(decodeRole(accessToken));
-        setIsApprovedOrganizer(decodeIsApprovedOrganizer(accessToken));
-        setUserName(decodeName(accessToken));
+    const loginWithGoogle = async (idToken: string) => {
+        const response = await api.post<AuthResult>('/auth/google', { idToken });
+        return resolveAuthResult(response.data);
     };
 
     const register = async (email: string, password: string, firstName: string, lastName: string, role: string = 'User') => {
@@ -90,16 +117,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             lastName,
             role,
         });
-        const { accessToken, refreshToken } = response.data;
-
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-        document.cookie = `accessToken=${accessToken}; path=/; max-age=3600`;
-
-        setIsAuthenticated(true);
-        setRole(decodeRole(accessToken));
-        setIsApprovedOrganizer(decodeIsApprovedOrganizer(accessToken));
-        setUserName(decodeName(accessToken));
+        const outcome = resolveAuthResult(response.data);
+        if (outcome.requiresTwoFactor) {
+            throw new Error('Unexpected two-factor challenge');
+        }
     };
 
     const logout = useCallback(() => {
@@ -113,7 +134,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
     
     return (
-        <AuthContext.Provider value={ {isAuthenticated, isLoading, role, isApprovedOrganizer, userName, login, register, logout }}>
+        <AuthContext.Provider value={{
+            isAuthenticated,
+            isLoading,
+            role,
+            isApprovedOrganizer,
+            userName,
+            login,
+            verifyTwoFactor,
+            loginWithGoogle,
+            register,
+            logout,
+        }}>
             {children}
         </AuthContext.Provider>
     )

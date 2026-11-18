@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +12,7 @@ import { useTranslation } from '@/i18n';
 import AuthShell from '@/components/AuthShell';
 import Alert from '@/components/ui/Alert';
 import Segmented from '@/components/ui/Segmented';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 const registerSchema = z.object({
     firstName: z.string().min(1, 'ui.auth.errFirstName').max(100),
@@ -31,7 +32,7 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-    const { register: registerUser } = useAuth();
+    const { register: registerUser, loginWithGoogle } = useAuth();
     const router = useRouter();
     const { t } = useTranslation();
     const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,23 @@ export default function RegisterPage() {
             setIsLoading(false);
         }
     };
+
+    const onGoogle = useCallback(async (idToken: string) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const outcome = await loginWithGoogle(idToken);
+            if (outcome.requiresTwoFactor) {
+                router.push('/auth/login');
+                return;
+            }
+            router.push('/');
+        } catch {
+            setError(t('ui.auth.googleFailed'));
+        } finally {
+            setIsLoading(false);
+        }
+    }, [loginWithGoogle, router, t]);
 
     const iconInput = (name: 'email' | 'password' | 'confirmPassword', Icon: typeof Mail, type: string, autoComplete: string, placeholder: string) => (
         <div className="relative">
@@ -107,6 +125,12 @@ export default function RegisterPage() {
                     {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
                 </button>
             </form>
+            <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-line" />
+                <span className="text-xs font-medium uppercase tracking-wide text-muted">{t('ui.auth.or')}</span>
+                <div className="h-px flex-1 bg-line" />
+            </div>
+            <GoogleSignInButton onCredential={onGoogle} disabled={isLoading} />
             <p className="text-center text-sm text-muted">
                 {t('ui.auth.haveAccount')}{' '}
                 <Link href="/auth/login" className="font-semibold text-brand-600 hover:underline">{t('auth.signIn')}</Link>

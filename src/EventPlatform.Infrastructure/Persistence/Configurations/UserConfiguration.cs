@@ -16,7 +16,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             
         builder.HasIndex(u => u.Email).IsUnique();
         
-        builder.Property(u => u.PasswordHash).IsRequired();
+        builder.Property(u => u.PasswordHash)
+            .IsRequired()
+            .HasMaxLength(500);
         
         builder.Property(u =>u.FirstName)
             .IsRequired()
@@ -32,6 +34,21 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         
         builder.Property(u => u.IsBlocked)
             .HasDefaultValue(false);
+
+        builder.Property(u => u.TwoFactorEnabled)
+            .HasDefaultValue(false);
+
+        builder.Property(u => u.TwoFactorSecret)
+            .HasMaxLength(128);
+
+        builder.Property(u => u.GoogleSubject)
+            .HasMaxLength(256);
+
+        builder.HasIndex(u => u.GoogleSubject)
+            .IsUnique()
+            .HasFilter("\"GoogleSubject\" IS NOT NULL");
+
+        builder.Ignore(u => u.HasPassword);
         
         builder.HasMany(u => u.OrganizedEvents)
             .WithOne(e => e.Organizer)

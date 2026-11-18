@@ -22,11 +22,17 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, AuthRes
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Email == request.Email.ToLowerInvariant().Trim(), cancellationToken);
 
-        if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (user is null || !user.HasPassword || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new DomainException("Invalid email or password.");
         
         if (user.IsBlocked)
             throw new DomainException("Your account has been blocked. Please contact support.");
+
+        if (user.TwoFactorEnabled)
+        {
+            var twoFactorToken = _jwtService.GenerateTwoFactorToken(user.Id);
+            return new AuthResult(null, null, null, RequiresTwoFactor: true, TwoFactorToken: twoFactorToken);
+        }
         
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();

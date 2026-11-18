@@ -12,8 +12,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
-            .AllowAnyHeader()
+        if (builder.Environment.IsDevelopment())
+            policy.SetIsOriginAllowed(_ => true);
+        else
+            policy.WithOrigins("http://localhost:3000");
+
+        policy.AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
@@ -25,6 +29,13 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "EventPlatform API",
+        Version = "v1",
+        Description = "Auth supports JWT Bearer. For protected endpoints click Authorize and paste: Bearer {token}"
+    });
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -32,7 +43,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter your JWT token"
+        Description = "Paste only the JWT access token. Swagger adds the Bearer prefix."
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -63,11 +74,14 @@ using (var scope = app.Services.CreateScope())
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("Frontend");
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "EventPlatform API v1");
+    options.DocumentTitle = "EventPlatform API";
+});
+
+app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
 app.UseAuthentication();
 app.UseAuthorization();

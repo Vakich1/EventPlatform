@@ -50,6 +50,7 @@ services:
       - EmailSettings__SenderEmail=your-email@example.com
       - EmailSettings__Username=your-mailtrap-username
       - EmailSettings__Password=your-mailtrap-password
+      - GoogleSettings__ClientId=${GOOGLE_CLIENT_ID:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -65,6 +66,7 @@ services:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:5220
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
     depends_on:
       - api
 
