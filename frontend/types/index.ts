@@ -1,7 +1,37 @@
 export interface AuthResult {
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: string;
+    accessToken?: string | null;
+    refreshToken?: string | null;
+    expiresAt?: string | null;
+    requiresTwoFactor?: boolean;
+    twoFactorToken?: string | null;
+}
+
+export interface TwoFactorSetupResult {
+    secret: string;
+    authenticatorUri: string;
+    isEnabled: boolean;
+}
+
+export interface TwoFactorStatus {
+    isEnabled: boolean;
+}
+
+export type LoginOutcome =
+    | { requiresTwoFactor: false }
+    | { requiresTwoFactor: true; twoFactorToken: string };
+
+export interface CurrentUser {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    role: string;
+    isApprovedOrganizer: boolean;
+    twoFactorEnabled: boolean;
+    hasPassword: boolean;
+    linkedGoogle: boolean;
+    createdAt: string;
 }
 
 export interface EventSummary {

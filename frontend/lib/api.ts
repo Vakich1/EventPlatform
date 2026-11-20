@@ -41,6 +41,9 @@ api.interceptors.response.use(
                 );
 
                 const { accessToken, refreshToken: newRefreshToken } = refreshResponse.data;
+                if (!accessToken || !newRefreshToken) {
+                    throw new Error('Invalid refresh response');
+                }
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', newRefreshToken);
 

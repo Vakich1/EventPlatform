@@ -20,6 +20,8 @@ public static class InfrastructureExtensions
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<ITotpService, TotpService>();
+        services.AddScoped<IGoogleAuthService, GoogleAuthService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IQrCodeService, QrCodeService>();

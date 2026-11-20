@@ -50,6 +50,7 @@ services:
       - EmailSettings__SenderEmail=your-email@example.com
       - EmailSettings__Username=your-mailtrap-username
       - EmailSettings__Password=your-mailtrap-password
+      - GoogleSettings__ClientId=${GOOGLE_CLIENT_ID:-}
     depends_on:
       postgres:
         condition: service_healthy

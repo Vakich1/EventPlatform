@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ReactNode, useEffect, useState } from 'react';
-import { Calendar, CalendarCheck, CalendarPlus, LayoutDashboard, ListChecks, LucideIcon, ShieldCheck, Ticket, UserPlus, Users } from 'lucide-react';
+import { Calendar, CalendarCheck, CalendarPlus, LayoutDashboard, ListChecks, LucideIcon, Shield, ShieldCheck, Ticket, UserRound, UserPlus, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/i18n';
@@ -48,6 +48,8 @@ export default function AppShell({ kind, children }: { kind: 'user' | 'admin'; c
                 label: t('ui.side.attendee'),
                 items: [
                     { href: '/dashboard', label: t('ui.nav.tickets'), icon: Ticket, active: pathname === '/dashboard' },
+                    { href: '/dashboard/profile', label: t('ui.nav.profile'), icon: UserRound, active: pathname.startsWith('/dashboard/profile') },
+                    { href: '/dashboard/security', label: t('ui.nav.security'), icon: Shield, active: pathname.startsWith('/dashboard/security') },
                     { href: '/', label: t('ui.side.catalog'), icon: Calendar, active: false },
                 ],
             },

@@ -9,7 +9,7 @@ A full-stack event management platform built with ASP.NET Core 10 and Next.js 14
 - **Registration** — Register for events, receive QR-code ticket via email
 - **Payments** — Stripe integration for paid tickets
 - **Check-in** — Scan QR-code at the entrance to check in attendees
-- **Authentication** — JWT + Refresh Tokens
+- **Authentication** — JWT + Refresh Tokens, TOTP 2FA, Google sign-in
 
 ## Tech Stack
 
@@ -97,10 +97,21 @@ npm install
 npm run dev
 ```
 
-**7. Open the app**
+**7. (Optional) Google sign-in**
+
+Create an OAuth 2.0 Web Client ID in Google Cloud Console and set it once on the API:
+
+- local: `GoogleSettings:ClientId` in `src/EventPlatform.API/appsettings.json` (or Development)
+- docker: `GoogleSettings__ClientId` / env `GOOGLE_CLIENT_ID` in compose
+
+The frontend reads it from `GET /api/auth/google/config`.  
+Authorized JavaScript origins: `http://localhost:3000`
+
+**8. Open the app**
 
 - Frontend: http://localhost:3000
-- Swagger: http://localhost:5220/swagger
+- Swagger: http://localhost:5220/swagger (always available; root `/` redirects there)
+- 2FA settings: http://localhost:3000/dashboard/security
 
 ## Architecture
 

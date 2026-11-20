@@ -16,6 +16,10 @@ public class User : BaseEntity
     public DateTime? OrganizerApprovedAt { get; private set; }
     public string? RefreshToken { get; private set; }
     public DateTime? RefreshTokenExpiresAt { get; private set; }
+    public bool TwoFactorEnabled { get; private set; }
+    public string? TwoFactorSecret { get; private set; }
+    public string? GoogleSubject { get; private set; }
+    public bool HasPassword => !string.IsNullOrEmpty(PasswordHash);
 
     private readonly List<Event> _organizedEvents = [];
     public IReadOnlyCollection<Event> OrganizedEvents => _organizedEvents.AsReadOnly();
@@ -37,6 +41,55 @@ public class User : BaseEntity
             FirstName = firstName.Trim(),
             LastName = lastName.Trim(),
         };
+    }
+
+    public static User CreateFromGoogle(string email, string firstName, string lastName, string googleSubject)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            throw new DomainException("Email cannot be empty.");
+        if (string.IsNullOrWhiteSpace(googleSubject))
+            throw new DomainException("Google subject cannot be empty.");
+
+        return new User
+        {
+            Email = email.ToLowerInvariant().Trim(),
+            PasswordHash = string.Empty,
+            FirstName = string.IsNullOrWhiteSpace(firstName) ? "User" : firstName.Trim(),
+            LastName = string.IsNullOrWhiteSpace(lastName) ? "Google" : lastName.Trim(),
+            GoogleSubject = googleSubject,
+        };
+    }
+
+    public void LinkGoogle(string googleSubject)
+    {
+        if (string.IsNullOrWhiteSpace(googleSubject))
+            throw new DomainException("Google subject cannot be empty.");
+        GoogleSubject = googleSubject;
+        SetUpdatedAt();
+    }
+
+    public void SetTwoFactorSecret(string secret)
+    {
+        if (string.IsNullOrWhiteSpace(secret))
+            throw new DomainException("Two-factor secret cannot be empty.");
+        TwoFactorSecret = secret;
+        TwoFactorEnabled = false;
+        SetUpdatedAt();
+    }
+
+    public void EnableTwoFactor()
+    {
+        if (string.IsNullOrWhiteSpace(TwoFactorSecret))
+            throw new DomainException("Two-factor secret is not configured.");
+        TwoFactorEnabled = true;
+        SetUpdatedAt();
+    }
+
+    public void DisableTwoFactor()
+    {
+        TwoFactorEnabled = false;
+        TwoFactorSecret = null;
+        SetUpdatedAt();
     }
     
     public void SetRole(UserRole role)
