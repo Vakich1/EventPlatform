@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { Calendar, CalendarCheck, ChevronDown, Globe, LayoutDashboard, ListChecks, LogOut, LucideIcon, Menu, Plus, Shield, Ticket, UserPlus, Users, X } from 'lucide-react';
+import { Calendar, CalendarCheck, ChevronDown, Globe, LayoutDashboard, ListChecks, LogOut, LucideIcon, Menu, Plus, Shield, Ticket, UserRound, UserPlus, Users, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/i18n';
 import Logo from '@/components/Logo';
@@ -158,6 +158,10 @@ export default function Navbar() {
                                     </button>
                                     {profileOpen && (
                                         <div role="menu" className="absolute right-0 top-full mt-2 w-56 rounded-[14px] border border-line bg-white p-1.5 shadow-card-hover">
+                                            <Link role="menuitem" href="/dashboard/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm font-medium text-muted hover:bg-neutral-bg hover:text-ink">
+                                                <UserRound className="h-4 w-4" aria-hidden="true" />
+                                                {t('ui.nav.profile')}
+                                            </Link>
                                             <Link role="menuitem" href="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm font-medium text-muted hover:bg-neutral-bg hover:text-ink">
                                                 <Ticket className="h-4 w-4" aria-hidden="true" />
                                                 {t('ui.nav.tickets')}

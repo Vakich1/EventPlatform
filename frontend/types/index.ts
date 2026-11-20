@@ -20,6 +20,20 @@ export type LoginOutcome =
     | { requiresTwoFactor: false }
     | { requiresTwoFactor: true; twoFactorToken: string };
 
+export interface CurrentUser {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    role: string;
+    isApprovedOrganizer: boolean;
+    twoFactorEnabled: boolean;
+    hasPassword: boolean;
+    linkedGoogle: boolean;
+    createdAt: string;
+}
+
 export interface EventSummary {
     id: string;
     title: string;

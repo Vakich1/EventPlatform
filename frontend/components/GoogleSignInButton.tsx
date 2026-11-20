@@ -27,9 +27,16 @@ export default function GoogleSignInButton({
 }) {
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
+    const onCredentialRef = useRef(onCredential);
     const [scriptReady, setScriptReady] = useState(false);
     const [clientId, setClientId] = useState<string | null>(null);
     const [loaded, setLoaded] = useState(false);
+
+    onCredentialRef.current = onCredential;
+
+    useEffect(() => {
+        if (window.google?.accounts?.id) setScriptReady(true);
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -47,22 +54,23 @@ export default function GoogleSignInButton({
     }, []);
 
     useEffect(() => {
-        if (!scriptReady || !clientId || !containerRef.current || !window.google || disabled) return;
-        containerRef.current.innerHTML = '';
+        if (!loaded || !scriptReady || !clientId || !containerRef.current || !window.google || disabled) return;
+        const el = containerRef.current;
+        el.innerHTML = '';
         window.google.accounts.id.initialize({
             client_id: clientId,
             callback: (response: { credential?: string }) => {
-                if (response.credential) void onCredential(response.credential);
+                if (response.credential) void onCredentialRef.current(response.credential);
             },
         });
-        window.google.accounts.id.renderButton(containerRef.current, {
+        window.google.accounts.id.renderButton(el, {
             theme: 'outline',
             size: 'large',
             width: 320,
             text: 'continue_with',
             shape: 'rectangular',
         });
-    }, [scriptReady, clientId, disabled, onCredential]);
+    }, [loaded, scriptReady, clientId, disabled]);
 
     if (loaded && !clientId) {
         return (
@@ -80,6 +88,7 @@ export default function GoogleSignInButton({
                 src="https://accounts.google.com/gsi/client"
                 strategy="afterInteractive"
                 onLoad={() => setScriptReady(true)}
+                onReady={() => setScriptReady(true)}
             />
             <div ref={containerRef} className={`flex justify-center ${disabled ? 'pointer-events-none opacity-60' : ''}`} />
         </>

@@ -81,10 +81,10 @@ export default function SecurityPage() {
             <PageHeader title={t('ui.security.title')} subtitle={t('ui.security.subtitle')} />
             {message && <Alert tone="success">{message}</Alert>}
             {error && <Alert tone="danger">{error}</Alert>}
-            <div className="card flex flex-col gap-5">
+            <div className="card flex flex-col gap-5 p-6">
                 <div className="flex items-start gap-3">
-                    <ShieldCheck className="mt-0.5 h-5 w-5 text-brand-600" aria-hidden="true" />
-                    <div>
+                    <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+                    <div className="min-w-0">
                         <h2 className="text-base font-semibold text-ink">{t('ui.security.twoFactor')}</h2>
                         <p className="mt-1 text-sm text-muted">
                             {enabled ? t('ui.security.statusOn') : t('ui.security.statusOff')}
@@ -93,9 +93,11 @@ export default function SecurityPage() {
                 </div>
 
                 {!enabled && !setup && (
-                    <button type="button" className="btn btn-primary w-fit" disabled={busy} onClick={startSetup}>
-                        {t('ui.security.enable')}
-                    </button>
+                    <div>
+                        <button type="button" className="btn btn-primary" disabled={busy} onClick={startSetup}>
+                            {t('ui.security.enable')}
+                        </button>
+                    </div>
                 )}
 
                 {setup && !setup.isEnabled && (
@@ -122,9 +124,11 @@ export default function SecurityPage() {
                                 placeholder="000000"
                             />
                         </div>
-                        <button type="button" className="btn btn-primary w-fit" disabled={busy || code.length !== 6} onClick={enable}>
-                            {t('ui.security.confirmEnable')}
-                        </button>
+                        <div>
+                            <button type="button" className="btn btn-primary" disabled={busy || code.length !== 6} onClick={enable}>
+                                {t('ui.security.confirmEnable')}
+                            </button>
+                        </div>
                     </div>
                 )}
 
@@ -142,9 +146,11 @@ export default function SecurityPage() {
                                 placeholder="000000"
                             />
                         </div>
-                        <button type="button" className="btn btn-secondary w-fit" disabled={busy || code.length !== 6} onClick={disable}>
-                            {t('ui.security.disable')}
-                        </button>
+                        <div>
+                            <button type="button" className="btn btn-secondary" disabled={busy || code.length !== 6} onClick={disable}>
+                                {t('ui.security.disable')}
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

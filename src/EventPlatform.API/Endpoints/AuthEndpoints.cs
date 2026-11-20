@@ -6,6 +6,7 @@ using EventPlatform.Application.Auth.Commands.RefreshToken;
 using EventPlatform.Application.Auth.Commands.RegisterUser;
 using EventPlatform.Application.Auth.Commands.SetupTwoFactor;
 using EventPlatform.Application.Auth.Commands.VerifyTwoFactor;
+using EventPlatform.Application.Auth.Queries.GetCurrentUser;
 using EventPlatform.Application.Auth.Queries.GetTwoFactorStatus;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -90,6 +91,17 @@ public static class AuthEndpoints
         .WithName("RefreshToken")
         .WithSummary("Refresh access token")
         .AllowAnonymous();
+
+        group.MapGet("/me", async (
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetCurrentUserQuery(), cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("GetCurrentUser")
+        .WithSummary("Get current authenticated user profile")
+        .RequireAuthorization();
 
         group.MapGet("/2fa", async (
             ISender sender,
